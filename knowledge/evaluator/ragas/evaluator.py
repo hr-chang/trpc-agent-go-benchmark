@@ -38,6 +38,7 @@ from util import get_config
 from knowledge_system.base import KnowledgeBase
 from dataset.base import BaseDataset
 from evaluator.base import Evaluator, EvaluationSample
+from evaluator.ragas.diagnostics import RAGASFinishReasonDiagnostics
 
 
 class RAGASEvaluator(Evaluator):
@@ -76,12 +77,14 @@ class RAGASEvaluator(Evaluator):
             temperature=0,
             api_key=SecretStr(api_key) if api_key else None,
             base_url=base_url,
+            default_headers=config["eval_headers"] or None,
             max_tokens=40960,
         )
         self.embeddings = OpenAIEmbeddings(
             model=embedding_model,
-            api_key=SecretStr(api_key) if api_key else None,
-            base_url=base_url,
+            api_key=SecretStr(config["embedding_api_key"]) if config["embedding_api_key"] else None,
+            base_url=config["embedding_base_url"],
+            default_headers=config["embedding_headers"] or None,
             tiktoken_enabled=False,  # Disable tiktoken for non-OpenAI models
             check_embedding_ctx_length=False,  # Skip context length check
         )
@@ -114,23 +117,29 @@ class RAGASEvaluator(Evaluator):
             }
         )
 
-        result: Any = evaluate(
-            dataset,
-            metrics=[
-                # Answer quality metrics
-                Faithfulness(),
-                AnswerRelevancy(),
-                AnswerCorrectness(),
-                AnswerSimilarity(),
-                # Context quality metrics
-                ContextPrecision(),
-                ContextRecall(),
-                ContextEntityRecall(),
-            ],
-            llm=self.llm,
-            embeddings=self.embeddings,
-            run_config=self.run_config,
-        )
+        diagnostics = RAGASFinishReasonDiagnostics.from_environment()
+        try:
+            result: Any = evaluate(
+                dataset,
+                metrics=[
+                    # Answer quality metrics
+                    Faithfulness(),
+                    AnswerRelevancy(),
+                    AnswerCorrectness(),
+                    AnswerSimilarity(),
+                    # Context quality metrics
+                    ContextPrecision(),
+                    ContextRecall(),
+                    ContextEntityRecall(),
+                ],
+                llm=self.llm,
+                embeddings=self.embeddings,
+                run_config=self.run_config,
+                callbacks=[diagnostics] if diagnostics is not None else None,
+            )
+        finally:
+            if diagnostics is not None:
+                diagnostics.close()
 
         def safe_mean(value: Any) -> float:
             """Safely compute mean from a value that might be a list or float."""
@@ -141,12 +150,23 @@ class RAGASEvaluator(Evaluator):
                 return 0.0
             return float(value)
 
+        def metric_value(*names: str) -> Any:
+            """Read a metric using its legacy or current RAGAS result name."""
+            for name in names:
+                try:
+                    return result[name]
+                except KeyError:
+                    continue
+            raise KeyError(f"none of the metric names were found: {names}")
+
         return {
             # Answer metrics
             "faithfulness": safe_mean(result["faithfulness"]),
             "answer_relevancy": safe_mean(result["answer_relevancy"]),
             "answer_correctness": safe_mean(result["answer_correctness"]),
-            "answer_similarity": safe_mean(result["answer_similarity"]),
+            "answer_similarity": safe_mean(
+                metric_value("answer_similarity", "semantic_similarity")
+            ),
             # Context metrics
             "context_precision": safe_mean(result["context_precision"]),
             "context_recall": safe_mean(result["context_recall"]),

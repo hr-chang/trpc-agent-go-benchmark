@@ -30,6 +30,16 @@ DEFAULT_PGVECTOR_DATABASE = "rgb"
 DEFAULT_CHROMADB_PATH = "./chromadb_storage"
 
 
+def _gateway_headers(prefix: str) -> dict:
+    """Build optional SMG gateway headers without exposing their values."""
+    headers = {}
+    if value := os.environ.get(f"{prefix}_SMG_ROUTING_KEY"):
+        headers["X-SMG-Routing-Key"] = value
+    if value := os.environ.get(f"{prefix}_SMG_AGENT_NAME"):
+        headers["X-SMG-Agent-Name"] = value
+    return headers
+
+
 def get_pg_connection() -> str:
     """
     Build PostgreSQL connection string from environment variables.
@@ -81,8 +91,10 @@ def get_config():
 
     Environment variables:
         EMBEDDING_MODEL: Embedding model name (default: server:274214)
+        EMBEDDING_API_KEY: Embedding API key (default: same as OPENAI_API_KEY)
+        EMBEDDING_BASE_URL: Embedding API URL (default: same as OPENAI_BASE_URL)
         MODEL_NAME: LLM model name for knowledge/RAG (default: deepseek-v3.2)
-        EVAL_MODEL_NAME: LLM model name for evaluation (default: gemini-3-flash)
+        EVAL_MODEL_NAME: LLM model name for evaluation (default: qwen3.5-397b-a17b)
         OPENAI_API_KEY: OpenAI API key (required)
         OPENAI_BASE_URL: OpenAI API base URL (default: https://api.openai.com/v1)
         EVAL_API_KEY: Evaluation model API key (default: same as OPENAI_API_KEY)
@@ -95,12 +107,17 @@ def get_config():
     """
     api_key = os.environ.get("OPENAI_API_KEY", "")
     base_url = os.environ.get("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)
+    embedding_api_key = os.environ.get("EMBEDDING_API_KEY") or api_key
+    embedding_base_url = os.environ.get("EMBEDDING_BASE_URL") or base_url
     chroma_api_key = os.environ.get("CHROMA_OPENAI_API_KEY")
     chroma_api_base = os.environ.get("CHROMA_OPENAI_API_BASE")
-    
+
     return {
         # Knowledge/RAG model config
         "embedding_model": os.environ.get("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL),
+        "embedding_api_key": embedding_api_key,
+        "embedding_base_url": embedding_base_url,
+        "embedding_headers": _gateway_headers("EMBEDDING"),
         "model_name": os.environ.get("MODEL_NAME", DEFAULT_MODEL_NAME),
         "api_key": api_key,
         "base_url": base_url,
@@ -108,6 +125,7 @@ def get_config():
         "eval_model_name": os.environ.get("EVAL_MODEL_NAME", DEFAULT_EVAL_MODEL_NAME),
         "eval_api_key": os.environ.get("EVAL_API_KEY", api_key),
         "eval_base_url": os.environ.get("EVAL_BASE_URL", base_url),
+        "eval_headers": _gateway_headers("EVAL"),
         # Database config
         "pg_connection": get_pg_connection(),
         # ChromaDB config

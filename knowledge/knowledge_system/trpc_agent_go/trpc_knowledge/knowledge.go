@@ -19,6 +19,7 @@ import (
 	"strings"
 	"sync"
 
+	openaiopt "github.com/openai/openai-go/option"
 	"trpc.group/trpc-go/trpc-agent-go/agent/llmagent"
 	"trpc.group/trpc-go/trpc-agent-go/event"
 	"trpc.group/trpc-go/trpc-agent-go/knowledge"
@@ -109,14 +110,35 @@ func NewKnowledgeServiceWithConfig(cfg *ServiceConfig) (*KnowledgeService, error
 		return nil, fmt.Errorf("failed to create vector store: %w", err)
 	}
 
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	baseURL := os.Getenv("OPENAI_BASE_URL")
-	svc.emb = openai.New(
+	embeddingOptions := []openai.Option{
 		openai.WithModel("server:274214"),
 		openai.WithDimensions(1024),
-		openai.WithAPIKey(apiKey),
-		openai.WithBaseURL(baseURL),
-	)
+	}
+	if modelName := os.Getenv("EMBEDDING_MODEL"); modelName != "" {
+		embeddingOptions[0] = openai.WithModel(modelName)
+	}
+	apiKey := os.Getenv("EMBEDDING_API_KEY")
+	if apiKey == "" {
+		apiKey = os.Getenv("OPENAI_API_KEY")
+	}
+	if apiKey != "" {
+		embeddingOptions = append(embeddingOptions, openai.WithAPIKey(apiKey))
+	}
+	baseURL := os.Getenv("EMBEDDING_BASE_URL")
+	if baseURL == "" {
+		baseURL = os.Getenv("OPENAI_BASE_URL")
+	}
+	if baseURL != "" {
+		embeddingOptions = append(embeddingOptions, openai.WithBaseURL(baseURL))
+	}
+	if headers := gatewayHeaders("EMBEDDING"); len(headers) > 0 {
+		requestOptions := make([]openaiopt.RequestOption, 0, len(headers))
+		for key, value := range headers {
+			requestOptions = append(requestOptions, openaiopt.WithHeader(key, value))
+		}
+		embeddingOptions = append(embeddingOptions, openai.WithRequestOptions(requestOptions...))
+	}
+	svc.emb = openai.New(embeddingOptions...)
 	svc.kb = knowledge.New(
 		knowledge.WithVectorStore(svc.vs),
 		knowledge.WithEmbedder(svc.emb),
@@ -342,9 +364,14 @@ func (s *KnowledgeService) runAgent(ctx context.Context, question string, k int)
 		Temperature: &temperature,
 	}
 
+	llmOptions := make([]openaimodel.Option, 0, 1)
+	if headers := gatewayHeaders("LLM"); len(headers) > 0 {
+		llmOptions = append(llmOptions, openaimodel.WithHeaders(headers))
+	}
+
 	agent := llmagent.New(
 		"evaluation-assistant",
-		llmagent.WithModel(openaimodel.New(s.modelName)),
+		llmagent.WithModel(openaimodel.New(s.modelName, llmOptions...)),
 		llmagent.WithTools([]tool.Tool{searchTool}),
 		llmagent.WithInstruction(
 			"You are a helpful assistant that answers questions using a knowledge base search tool.\n\n"+
@@ -358,6 +385,7 @@ func (s *KnowledgeService) runAgent(ctx context.Context, question string, k int)
 				"7. Give only the direct answer.",
 		),
 		llmagent.WithGenerationConfig(genConfig),
+		llmagent.WithMaxToolIterations(500),
 	)
 
 	sessionService := sessioninmemory.NewSessionService()
@@ -665,4 +693,15 @@ func getEnvOrDefault(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func gatewayHeaders(prefix string) map[string]string {
+	headers := make(map[string]string)
+	if value := os.Getenv(prefix + "_SMG_ROUTING_KEY"); value != "" {
+		headers["X-SMG-Routing-Key"] = value
+	}
+	if value := os.Getenv(prefix + "_SMG_AGENT_NAME"); value != "" {
+		headers["X-SMG-Agent-Name"] = value
+	}
+	return headers
 }
