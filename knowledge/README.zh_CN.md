@@ -25,8 +25,12 @@ pip install -r requirements.txt
 export OPENAI_API_KEY="your-api-key"
 export OPENAI_BASE_URL="your-base-url"  # 可选
 export MODEL_NAME="deepseek-v3.2"        # 可选，用于 RAG 的模型
-export EVAL_MODEL_NAME="gemini-3-flash"   # 可选，用于评测的模型
+export EVAL_MODEL_NAME="your-independent-judge-model"
+export EVAL_API_KEY="your-independent-judge-key"
+export EVAL_BASE_URL="your-independent-judge-url"
 export EMBEDDING_MODEL="server:274214"  # 可选
+export EMBEDDING_API_KEY="your-embedding-key"
+export EMBEDDING_BASE_URL="your-embedding-url"
 
 # PostgreSQL (PGVector) 配置
 export PGVECTOR_HOST="127.0.0.1"
@@ -54,6 +58,73 @@ python3 main.py --kb=agno
 # 评测 AutoGen
 python3 main.py --kb=autogen
 ```
+
+### Baseline 复现证据
+
+HuggingFace baseline-reproduction lane 只用于验证现有回答、检索和 Judge
+链路，不是正式的 Contextual Embedding A/B 结果。
+
+正式证据要求 Judge 与 Agent 显式分离。必须配置 `EVAL_MODEL_NAME`、
+`EVAL_BASE_URL` 和 `EVAL_API_KEY`，并保证 model、endpoint 和 credential 分别不同于
+`MODEL_NAME`、`OPENAI_BASE_URL` 和 `OPENAI_API_KEY`。普通 benchmark 仍允许缺省配置
+回退，但严格 baseline 验证会拒绝这种回退。
+
+先在单独终端中，使用本次实验的环境变量和 PGVector 表启动
+tRPC-Agent-Go 服务：
+
+```bash
+cd knowledge_system/trpc_agent_go/trpc_knowledge
+go run . --port=8765 --vectorstore=pgvector --search-mode=0
+```
+
+然后在 `knowledge/` 目录运行固定的 54 题 baseline：
+
+```bash
+python3 main.py \
+  --kb=trpc-agent-go \
+  --dataset=huggingface \
+  --skip-load \
+  --output=results/glm52-independent-judge-bgem3-baseline.json
+```
+
+服务器受控运行应在加载模型和 PGVector 环境后使用版本化 runner。`smoke` 不初始化
+Judge，因此可以在新 Judge 凭据到位前运行：
+
+```bash
+export GOWORK=/absolute/path/to/run-scoped.go.work
+
+scripts/run_trpc_hf.sh \
+  smoke /absolute/path/to/runs/i0/service-smoke PG_TABLE
+
+# 仅在独立 EVAL_* 配置到位后运行。
+scripts/run_trpc_hf.sh \
+  baseline /absolute/path/to/runs/i0/formal-baseline PG_TABLE
+```
+
+`--skip-load` 表示有意复用当前索引。Manifest 会记录实际 PGVector 表和行数、
+各模型角色、TAG module 版本、Prompt 检索次数、工具循环硬 watchdog、仓库版本和
+准确命令。端点只保存去除凭据后的 identity，网关 header 只保存名称，不保存 API
+Key 或 header value。
+
+该命令会生成：
+
+- `*.manifest.json`：运行身份和实际配置；
+- `*.samples.json`：每完成一题就原子更新的有序 checkpoint；
+- `*.ragas-diagnostics.jsonl`：存在未完成 Judge 响应时的诊断；
+- 指定的 `*.json`：指标、逐样本证据、错误、耗时和最终证据有效性判定。
+
+如果 Q&A 已完成但 RAGAS 失败，可只重跑 evaluator，不再调用 Agent：
+
+```bash
+python3 main.py \
+  --samples-input=results/glm52-independent-judge-bgem3-baseline.json.samples.json \
+  --output=results/glm52-independent-judge-bgem3-baseline-ragas-retry.json
+```
+
+只要存在 Agent/Judge 错误、固定样本不完整、指标列有缺失或运行配置不可追溯，
+结果就会标记为 `evidence_status: insufficient`。干净结果也只可能在
+`evidence_scope: baseline_stability` 下标记为 `valid`，并始终保持
+`formal_ab_eligible: false`。
 
 ### 运行纵向评测（Vertical Evaluation）
 

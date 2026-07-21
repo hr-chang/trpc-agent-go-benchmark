@@ -29,6 +29,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -50,6 +52,8 @@ var (
 
 // Global knowledge service
 var knowledgeSvc *KnowledgeService
+
+const frameworkModulePath = "trpc.group/trpc-go/trpc-agent-go"
 
 // LoadRequest represents the request body for /load endpoint.
 type LoadRequest struct {
@@ -165,28 +169,56 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(buildRuntimeConfig(r.Context(), knowledgeSvc))
+}
 
+func buildRuntimeConfig(ctx context.Context, svc *KnowledgeService) map[string]any {
 	// Collect PG connection info from environment (masking password)
 	host := getEnvOrDefault("PGVECTOR_HOST", "127.0.0.1")
 	portStr := getEnvOrDefault("PGVECTOR_PORT", "5432")
 	user := getEnvOrDefault("PGVECTOR_USER", "root")
 	database := getEnvOrDefault("PGVECTOR_DATABASE", "rgb")
+	llmEndpoint := endpointIdentity(
+		getEnvOrDefault("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+	)
+	embeddingBaseURL := os.Getenv("EMBEDDING_BASE_URL")
+	if embeddingBaseURL == "" {
+		embeddingBaseURL = getEnvOrDefault(
+			"OPENAI_BASE_URL",
+			"https://api.openai.com/v1",
+		)
+	}
 
 	// Resolve the effective table name: command-line flag overrides env var.
 	effectiveTable := getEnvOrDefault("PGVECTOR_TABLE", "trpc_agent_go_eval")
-	if knowledgeSvc.config.PGTable != "" {
-		effectiveTable = knowledgeSvc.config.PGTable
+	if svc.config.PGTable != "" {
+		effectiveTable = svc.config.PGTable
 	}
 
 	cfg := map[string]any{
-		"model_name":           knowledgeSvc.modelName,
-		"vectorstore":          string(knowledgeSvc.storeType),
-		"search_mode":          knowledgeSvc.searchMode,
-		"use_rrf":              knowledgeSvc.config.UseRRF,
-		"hybrid_vector_weight": knowledgeSvc.config.HybridVectorWeight,
-		"hybrid_text_weight":   knowledgeSvc.config.HybridTextWeight,
-		"pg_table":             effectiveTable,
+		"model_name":               svc.modelName,
+		"embedding_model":          svc.embeddingModel,
+		"llm_endpoint":             llmEndpoint,
+		"embedding_endpoint":       endpointIdentity(embeddingBaseURL),
+		"embedding_dimensions":     benchmarkEmbeddingDims,
+		"vectorstore":              string(svc.storeType),
+		"search_mode":              svc.searchMode,
+		"use_rrf":                  svc.config.UseRRF,
+		"hybrid_vector_weight":     svc.config.HybridVectorWeight,
+		"hybrid_text_weight":       svc.config.HybridTextWeight,
+		"chunk_size":               benchmarkChunkSize,
+		"chunk_overlap":            benchmarkChunkOverlap,
+		"prompt_max_searches":      promptMaxSearches,
+		"hard_max_tool_iterations": hardMaxToolIterations,
+		"pg_table":                 effectiveTable,
+		"llm_header_names":         gatewayHeaderNames("LLM"),
+		"embedding_header_names":   gatewayHeaderNames("EMBEDDING"),
+		"framework_module":         frameworkModuleProvenance(),
 		"pg_connection": map[string]string{
 			"host":     host,
 			"port":     portStr,
@@ -195,7 +227,71 @@ func handleConfig(w http.ResponseWriter, r *http.Request) {
 			// Password intentionally omitted for security
 		},
 	}
-	json.NewEncoder(w).Encode(cfg)
+	count, err := svc.DocumentCount(ctx)
+	if err != nil {
+		cfg["index_document_count"] = nil
+		// Do not serialize driver errors: they can contain connection details.
+		cfg["index_document_count_error"] = "count_failed"
+	} else {
+		cfg["index_document_count"] = count
+	}
+	return cfg
+}
+
+func frameworkModuleProvenance() map[string]string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return map[string]string{
+			"path":    frameworkModulePath,
+			"version": "unknown",
+			"source":  "unavailable",
+		}
+	}
+	for _, dependency := range info.Deps {
+		if dependency.Path == frameworkModulePath {
+			return moduleProvenance(dependency)
+		}
+	}
+	if info.Main.Path == frameworkModulePath {
+		return moduleProvenance(&info.Main)
+	}
+	return map[string]string{
+		"path":    frameworkModulePath,
+		"version": "unknown",
+		"source":  "unavailable",
+	}
+}
+
+func moduleProvenance(module *debug.Module) map[string]string {
+	version := module.Version
+	checksum := module.Sum
+	source := "module"
+	provenance := map[string]string{
+		"path": module.Path,
+	}
+	if module.Replace != nil {
+		source = "replacement"
+		if module.Replace.Version != "" {
+			version = module.Replace.Version
+		}
+		if module.Replace.Sum != "" {
+			checksum = module.Replace.Sum
+		}
+		if !filepath.IsAbs(module.Replace.Path) {
+			provenance["replacement_path"] = module.Replace.Path
+		} else {
+			provenance["replacement_path"] = "local"
+		}
+	}
+	if version == "" {
+		version = "(devel)"
+	}
+	provenance["version"] = version
+	provenance["source"] = source
+	if checksum != "" {
+		provenance["sum"] = checksum
+	}
+	return provenance
 }
 
 func handleLoad(w http.ResponseWriter, r *http.Request) {

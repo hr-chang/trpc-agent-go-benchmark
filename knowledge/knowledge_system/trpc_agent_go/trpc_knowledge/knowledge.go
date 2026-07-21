@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,6 +59,13 @@ type VectorStoreType string
 const (
 	VectorStoreInMemory VectorStoreType = "inmemory"
 	VectorStorePGVector VectorStoreType = "pgvector"
+
+	defaultEmbeddingModel  = "server:274214"
+	benchmarkChunkSize     = 500
+	benchmarkChunkOverlap  = 50
+	promptMaxSearches      = 3
+	hardMaxToolIterations  = 500
+	benchmarkEmbeddingDims = 1024
 )
 
 // ServiceConfig holds all tunable parameters for the knowledge service.
@@ -73,14 +81,15 @@ type ServiceConfig struct {
 
 // KnowledgeService manages knowledge base operations.
 type KnowledgeService struct {
-	kb         *knowledge.BuiltinKnowledge
-	vs         vectorstore.VectorStore
-	emb        embedder.Embedder
-	lock       sync.RWMutex
-	config     *ServiceConfig
-	storeType  VectorStoreType
-	modelName  string
-	searchMode int // default search mode: 0=hybrid, 1=vector, 2=keyword, 3=filter
+	kb             *knowledge.BuiltinKnowledge
+	vs             vectorstore.VectorStore
+	emb            embedder.Embedder
+	lock           sync.RWMutex
+	config         *ServiceConfig
+	storeType      VectorStoreType
+	modelName      string
+	embeddingModel string
+	searchMode     int // default search mode: 0=hybrid, 1=vector, 2=keyword, 3=filter
 }
 
 // NewKnowledgeService creates a new KnowledgeService instance with default config.
@@ -110,12 +119,11 @@ func NewKnowledgeServiceWithConfig(cfg *ServiceConfig) (*KnowledgeService, error
 		return nil, fmt.Errorf("failed to create vector store: %w", err)
 	}
 
+	embeddingModel := getEnvOrDefault("EMBEDDING_MODEL", defaultEmbeddingModel)
+	svc.embeddingModel = embeddingModel
 	embeddingOptions := []openai.Option{
-		openai.WithModel("server:274214"),
-		openai.WithDimensions(1024),
-	}
-	if modelName := os.Getenv("EMBEDDING_MODEL"); modelName != "" {
-		embeddingOptions[0] = openai.WithModel(modelName)
+		openai.WithModel(embeddingModel),
+		openai.WithDimensions(benchmarkEmbeddingDims),
 	}
 	apiKey := os.Getenv("EMBEDDING_API_KEY")
 	if apiKey == "" {
@@ -218,7 +226,11 @@ func (s *KnowledgeService) Load(ctx context.Context, filePaths []string) error {
 	defer s.lock.Unlock()
 
 	// Create file source from paths with chunk size=500, overlap=50 (same as LangChain)
-	src := file.New(filePaths, file.WithChunkSize(500), file.WithChunkOverlap(50))
+	src := file.New(
+		filePaths,
+		file.WithChunkSize(benchmarkChunkSize),
+		file.WithChunkOverlap(benchmarkChunkOverlap),
+	)
 
 	// Recreate knowledge base with new source
 	s.kb = knowledge.New(
@@ -243,6 +255,13 @@ func (s *KnowledgeService) Load(ctx context.Context, filePaths []string) error {
 	}
 
 	return nil
+}
+
+// DocumentCount returns the number of indexed chunks in the active vector store.
+func (s *KnowledgeService) DocumentCount(ctx context.Context) (int, error) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return s.vs.Count(ctx)
 }
 
 // DocumentResult represents a single document result with metadata and score.
@@ -380,12 +399,16 @@ func (s *KnowledgeService) runAgent(ctx context.Context, question string, k int)
 				"2. Answer ONLY using information retrieved from the search tool.\n"+
 				"3. Do NOT add external knowledge, explanations, or context not found in the retrieved documents.\n"+
 				"4. Do NOT provide additional details, synonyms, or interpretations beyond what is explicitly stated in the search results.\n"+
-				"5. Use the search tool at most 3 times. If you haven't found the answer after 3 searches, provide the best answer from what you found.\n"+
+				fmt.Sprintf(
+					"5. Use the search tool at most %d times. If you haven't found the answer after %d searches, provide the best answer from what you found.\n",
+					promptMaxSearches,
+					promptMaxSearches,
+				)+
 				"6. Be concise and stick strictly to the facts from the retrieved information.\n"+
 				"7. Give only the direct answer.",
 		),
 		llmagent.WithGenerationConfig(genConfig),
-		llmagent.WithMaxToolIterations(500),
+		llmagent.WithMaxToolIterations(hardMaxToolIterations),
 	)
 
 	sessionService := sessioninmemory.NewSessionService()
@@ -695,6 +718,33 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
+func endpointIdentity(rawValue string) string {
+	value := strings.TrimSpace(rawValue)
+	if value == "" {
+		return ""
+	}
+	hasScheme := strings.Contains(value, "://")
+	parseValue := value
+	if !hasScheme {
+		parseValue = "https://" + value
+	}
+	parsed, err := url.Parse(parseValue)
+	if err != nil || parsed.Hostname() == "" {
+		return "invalid_endpoint"
+	}
+	host := parsed.Hostname()
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	if port := parsed.Port(); port != "" {
+		host += ":" + port
+	}
+	if hasScheme {
+		return parsed.Scheme + "://" + host + parsed.EscapedPath()
+	}
+	return host + parsed.EscapedPath()
+}
+
 func gatewayHeaders(prefix string) map[string]string {
 	headers := make(map[string]string)
 	if value := os.Getenv(prefix + "_SMG_ROUTING_KEY"); value != "" {
@@ -704,4 +754,14 @@ func gatewayHeaders(prefix string) map[string]string {
 		headers["X-SMG-Agent-Name"] = value
 	}
 	return headers
+}
+
+func gatewayHeaderNames(prefix string) []string {
+	headers := gatewayHeaders(prefix)
+	names := make([]string, 0, len(headers))
+	for name := range headers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }

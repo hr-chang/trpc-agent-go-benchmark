@@ -109,6 +109,9 @@ def get_config():
     base_url = os.environ.get("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)
     embedding_api_key = os.environ.get("EMBEDDING_API_KEY") or api_key
     embedding_base_url = os.environ.get("EMBEDDING_BASE_URL") or base_url
+    eval_model_name = os.environ.get("EVAL_MODEL_NAME")
+    eval_api_key = os.environ.get("EVAL_API_KEY")
+    eval_base_url = os.environ.get("EVAL_BASE_URL")
     chroma_api_key = os.environ.get("CHROMA_OPENAI_API_KEY")
     chroma_api_base = os.environ.get("CHROMA_OPENAI_API_BASE")
 
@@ -122,10 +125,13 @@ def get_config():
         "api_key": api_key,
         "base_url": base_url,
         # Evaluation model config (can use different model/endpoint)
-        "eval_model_name": os.environ.get("EVAL_MODEL_NAME", DEFAULT_EVAL_MODEL_NAME),
-        "eval_api_key": os.environ.get("EVAL_API_KEY", api_key),
-        "eval_base_url": os.environ.get("EVAL_BASE_URL", base_url),
+        "eval_model_name": eval_model_name or DEFAULT_EVAL_MODEL_NAME,
+        "eval_api_key": eval_api_key or api_key,
+        "eval_base_url": eval_base_url or base_url,
         "eval_headers": _gateway_headers("EVAL"),
+        "eval_model_explicit": bool(eval_model_name),
+        "eval_api_key_explicit": bool(eval_api_key),
+        "eval_base_url_explicit": bool(eval_base_url),
         # Database config
         "pg_connection": get_pg_connection(),
         # ChromaDB config

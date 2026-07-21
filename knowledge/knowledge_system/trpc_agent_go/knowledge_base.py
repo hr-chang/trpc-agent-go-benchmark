@@ -152,6 +152,18 @@ class TRPCAgentGoKnowledgeBase(KnowledgeBase):
         except requests.RequestException:
             return False
 
+    def get_runtime_config(self) -> dict:
+        """Return the service's effective, secret-free runtime configuration."""
+        response = requests.get(
+            f"{self.service_url}/config",
+            timeout=min(self.timeout, 30),
+        )
+        response.raise_for_status()
+        config = response.json()
+        if not isinstance(config, dict):
+            raise RuntimeError("Service /config response must be a JSON object")
+        return config
+
     def load(self, file_paths: List[str], metadatas: Optional[List[dict]] = None):
         """
         Load documents into the knowledge base.
@@ -219,6 +231,8 @@ class TRPCAgentGoKnowledgeBase(KnowledgeBase):
         Returns:
             Tuple of (answer_text, search_results).
         """
+        # Do not leak the previous question's trace into a failed request.
+        self.last_trace = None
         response = requests.post(
             f"{self.service_url}/answer",
             json={"question": question, "k": k},

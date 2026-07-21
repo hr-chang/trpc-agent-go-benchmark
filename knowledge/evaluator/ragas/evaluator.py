@@ -13,10 +13,9 @@ This module provides evaluation capabilities using RAGAS metrics
 to assess the quality of RAG systems.
 """
 
-import json
+import math
 import os
-import time
-from datetime import datetime
+import sys
 from typing import Any, List, Optional
 
 from datasets import Dataset
@@ -32,13 +31,15 @@ from ragas.run_config import RunConfig
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from pydantic import SecretStr
 
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+)
 from util import get_config
-from knowledge_system.base import KnowledgeBase
-from dataset.base import BaseDataset
 from evaluator.base import Evaluator, EvaluationSample
 from evaluator.ragas.diagnostics import RAGASFinishReasonDiagnostics
+from run_artifacts import endpoint_identity
 
 
 class RAGASEvaluator(Evaluator):
@@ -65,12 +66,52 @@ class RAGASEvaluator(Evaluator):
             timeout: Timeout in seconds for each LLM call.
         """
         config = get_config()
+        model_is_explicit = bool(llm_model) or config[
+            "eval_model_explicit"
+        ]
+        api_key_is_explicit = bool(api_key) or config[
+            "eval_api_key_explicit"
+        ]
+        base_url_is_explicit = bool(base_url) or config[
+            "eval_base_url_explicit"
+        ]
 
         # Use evaluation-specific config (can be different from knowledge model)
         llm_model = llm_model or config["eval_model_name"]
         embedding_model = embedding_model or config["embedding_model"]
         base_url = base_url or config["eval_base_url"]
         api_key = api_key or config["eval_api_key"]
+        judge_endpoint = endpoint_identity(base_url)
+        answer_endpoint = endpoint_identity(config["base_url"])
+        self.evaluation_runtime_config = {
+            "model_name": llm_model,
+            "embedding_model": embedding_model,
+            "endpoint": judge_endpoint,
+            "embedding_endpoint": endpoint_identity(
+                config["embedding_base_url"]
+            ),
+            "header_names": sorted(config["eval_headers"].keys()),
+            "embedding_header_names": sorted(
+                config["embedding_headers"].keys()
+            ),
+            "model_explicit": model_is_explicit,
+            "api_key_explicit": api_key_is_explicit,
+            "base_url_explicit": base_url_is_explicit,
+            "model_separate_from_answer": (
+                str(llm_model).strip().lower()
+                != str(config["model_name"]).strip().lower()
+            ),
+            "api_key_separate_from_answer": bool(
+                api_key
+                and config["api_key"]
+                and api_key != config["api_key"]
+            ),
+            "endpoint_separate_from_answer": bool(
+                judge_endpoint
+                and answer_endpoint
+                and judge_endpoint != answer_endpoint
+            ),
+        }
 
         self.llm = ChatOpenAI(
             model=llm_model,
@@ -92,6 +133,14 @@ class RAGASEvaluator(Evaluator):
             max_workers=max_workers,
             timeout=timeout,
         )
+        self.last_metrics: Optional[dict] = None
+
+    def get_runtime_config(self) -> dict:
+        """Return the evaluator configuration without credentials."""
+        return {
+            key: list(value) if isinstance(value, list) else value
+            for key, value in self.evaluation_runtime_config.items()
+        }
 
     def evaluate(self, samples: List[EvaluationSample]) -> str:
         """
@@ -103,8 +152,9 @@ class RAGASEvaluator(Evaluator):
         Returns:
             Formatted evaluation result as string.
         """
-        metrics = self._compute_metrics(samples)
-        return self._format_results(metrics)
+        self.last_metrics = None
+        self.last_metrics = self._compute_metrics(samples)
+        return self._format_results(self.last_metrics)
 
     def _compute_metrics(self, samples: List[EvaluationSample]) -> dict:
         """Compute RAGAS metrics for samples."""
@@ -141,52 +191,74 @@ class RAGASEvaluator(Evaluator):
             if diagnostics is not None:
                 diagnostics.close()
 
-        def safe_mean(value: Any) -> float:
-            """Safely compute mean from a value that might be a list or float."""
-            if isinstance(value, list):
-                valid = [v for v in value if v is not None and not (isinstance(v, float) and v != v)]
-                return sum(valid) / len(valid) if valid else 0.0
-            if value is None or (isinstance(value, float) and value != value):
-                return 0.0
-            return float(value)
+        records = result.to_pandas().to_dict(orient="records")
+        metric_aliases = {
+            "faithfulness": ("faithfulness",),
+            "answer_relevancy": ("answer_relevancy",),
+            "answer_correctness": ("answer_correctness",),
+            "answer_similarity": (
+                "answer_similarity",
+                "semantic_similarity",
+            ),
+            "context_precision": ("context_precision",),
+            "context_recall": ("context_recall",),
+            "context_entity_recall": ("context_entity_recall",),
+        }
 
-        def metric_value(*names: str) -> Any:
-            """Read a metric using its legacy or current RAGAS result name."""
-            for name in names:
-                try:
-                    return result[name]
-                except KeyError:
-                    continue
-            raise KeyError(f"none of the metric names were found: {names}")
+        aggregate = {}
+        metric_counts = {}
+        per_sample = []
+        for index, record in enumerate(records):
+            normalized = {"sample_index": index}
+            for metric, aliases in metric_aliases.items():
+                numeric_value = None
+                for name in aliases:
+                    if name not in record:
+                        continue
+                    try:
+                        candidate = float(record.get(name))
+                    except (TypeError, ValueError):
+                        continue
+                    if math.isfinite(candidate):
+                        numeric_value = candidate
+                        break
+                normalized[metric] = numeric_value
+            per_sample.append(normalized)
+
+        expected = len(samples)
+        for metric in metric_aliases:
+            values = [
+                record[metric]
+                for record in per_sample
+                if record[metric] is not None
+            ]
+            aggregate[metric] = sum(values) / len(values) if values else 0.0
+            metric_counts[metric] = {
+                "expected": expected,
+                "finite": len(values),
+                "missing": expected - len(values),
+            }
 
         return {
-            # Answer metrics
-            "faithfulness": safe_mean(result["faithfulness"]),
-            "answer_relevancy": safe_mean(result["answer_relevancy"]),
-            "answer_correctness": safe_mean(result["answer_correctness"]),
-            "answer_similarity": safe_mean(
-                metric_value("answer_similarity", "semantic_similarity")
-            ),
-            # Context metrics
-            "context_precision": safe_mean(result["context_precision"]),
-            "context_recall": safe_mean(result["context_recall"]),
-            "context_entity_recall": safe_mean(result["context_entity_recall"]),
-            "detailed_results": result.to_pandas().to_dict(),
+            "aggregate": aggregate,
+            "metric_counts": metric_counts,
+            "per_sample": per_sample,
         }
 
     def _format_results(self, metrics: dict) -> str:
         """Format metrics into a readable string."""
+        aggregate = metrics["aggregate"]
         result = []
         result.append("=== RAGAS Evaluation Results ===\n")
         result.append("--- Answer Quality ---")
-        result.append(f"Faithfulness:        {metrics['faithfulness']:.4f}")
-        result.append(f"Answer Relevancy:    {metrics['answer_relevancy']:.4f}")
-        result.append(f"Answer Correctness:  {metrics['answer_correctness']:.4f}")
-        result.append(f"Answer Similarity:   {metrics['answer_similarity']:.4f}")
+        result.append(f"Faithfulness:        {aggregate['faithfulness']:.4f}")
+        result.append(f"Answer Relevancy:    {aggregate['answer_relevancy']:.4f}")
+        result.append(f"Answer Correctness:  {aggregate['answer_correctness']:.4f}")
+        result.append(f"Answer Similarity:   {aggregate['answer_similarity']:.4f}")
         result.append("\n--- Context Quality ---")
-        result.append(f"Context Precision:   {metrics['context_precision']:.4f}")
-        result.append(f"Context Recall:      {metrics['context_recall']:.4f}")
-        result.append(f"Context Entity Recall: {metrics['context_entity_recall']:.4f}")
+        result.append(f"Context Precision:   {aggregate['context_precision']:.4f}")
+        result.append(f"Context Recall:      {aggregate['context_recall']:.4f}")
+        result.append(f"Context Entity Recall: {aggregate['context_entity_recall']:.4f}")
         return "\n".join(result)
 
     def get_metrics_dict(self, samples: List[EvaluationSample]) -> dict:
@@ -199,4 +271,9 @@ class RAGASEvaluator(Evaluator):
         Returns:
             Dictionary containing evaluation metrics.
         """
-        return self._compute_metrics(samples)
+        metrics = self._compute_metrics(samples)
+        return {
+            **metrics["aggregate"],
+            "detailed_results": metrics["per_sample"],
+            **metrics,
+        }

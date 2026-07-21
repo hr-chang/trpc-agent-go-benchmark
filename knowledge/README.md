@@ -25,8 +25,12 @@ pip install -r requirements.txt
 export OPENAI_API_KEY="your-api-key"
 export OPENAI_BASE_URL="your-base-url"  # Optional
 export MODEL_NAME="deepseek-v3.2"        # Optional, model for RAG
-export EVAL_MODEL_NAME="gemini-3-flash"   # Optional, model for evaluation
+export EVAL_MODEL_NAME="your-independent-judge-model"
+export EVAL_API_KEY="your-independent-judge-key"
+export EVAL_BASE_URL="your-independent-judge-url"
 export EMBEDDING_MODEL="server:274214"  # Optional
+export EMBEDDING_API_KEY="your-embedding-key"
+export EMBEDDING_BASE_URL="your-embedding-url"
 
 # PostgreSQL (PGVector) configuration
 export PGVECTOR_HOST="127.0.0.1"
@@ -54,6 +58,80 @@ python3 main.py --kb=agno
 # Evaluate with AutoGen
 python3 main.py --kb=autogen
 ```
+
+### Baseline Reproduction Evidence
+
+The HuggingFace baseline-reproduction lane is for validating the existing
+answer/retrieval/Judge pipeline. It is not a formal Contextual Embedding A/B
+result.
+
+Formal evidence requires an explicitly configured Judge that is independent
+from the Agent. Set `EVAL_MODEL_NAME`, `EVAL_BASE_URL`, and `EVAL_API_KEY`; the
+model name, endpoint, and credential must all differ from `MODEL_NAME`,
+`OPENAI_BASE_URL`, and `OPENAI_API_KEY`. Missing Judge settings may still fall
+back for ordinary benchmark usage, but strict baseline validation rejects that
+fallback.
+
+Start the tRPC-Agent-Go service in a separate shell with the intended
+environment and PGVector table:
+
+```bash
+cd knowledge_system/trpc_agent_go/trpc_knowledge
+go run . --port=8765 --vectorstore=pgvector --search-mode=0
+```
+
+Then run the fixed 54-question baseline from the `knowledge/` directory:
+
+```bash
+python3 main.py \
+  --kb=trpc-agent-go \
+  --dataset=huggingface \
+  --skip-load \
+  --output=results/glm52-independent-judge-bgem3-baseline.json
+```
+
+For controlled server runs, use the versioned runner after loading the model
+and PGVector environment. `smoke` does not initialize the Judge and is safe to
+run before Judge credentials are available:
+
+```bash
+export GOWORK=/absolute/path/to/run-scoped.go.work
+
+scripts/run_trpc_hf.sh \
+  smoke /absolute/path/to/runs/i0/service-smoke PG_TABLE
+
+# Run only after the independent EVAL_* settings have been supplied.
+scripts/run_trpc_hf.sh \
+  baseline /absolute/path/to/runs/i0/formal-baseline PG_TABLE
+```
+
+`--skip-load` deliberately reuses the configured index. The manifest records
+the effective PGVector table and row count, model roles, framework module
+version, prompt search limit, hard tool-loop watchdog, repository revisions,
+and the exact command. It records only endpoint identities and header names,
+never API keys or header values.
+
+The command writes:
+
+- `*.manifest.json`: immutable run identity and effective configuration;
+- `*.samples.json`: an atomic, ordered checkpoint updated after every question;
+- `*.ragas-diagnostics.jsonl`: unfinished-Judge diagnostics when present;
+- the requested `*.json`: metrics, per-sample evidence, failures, timing, and
+  the final evidence-validity decision.
+
+If RAGAS fails after Q&A has completed, rerun only the evaluator without
+calling the Agent again:
+
+```bash
+python3 main.py \
+  --samples-input=results/glm52-independent-judge-bgem3-baseline.json.samples.json \
+  --output=results/glm52-independent-judge-bgem3-baseline-ragas-retry.json
+```
+
+Any Agent/Judge failure, incomplete metric column, incomplete fixed sample set,
+or missing runtime provenance produces `evidence_status: insufficient`. A
+clean run can be `valid` only for `evidence_scope: baseline_stability`; it is
+always marked `formal_ab_eligible: false`.
 
 ### Run Vertical Evaluation
 

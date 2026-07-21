@@ -14,12 +14,25 @@ import argparse
 import json
 import os
 import platform
+import shlex
+import sys
 import time
 from typing import Any, Dict, List, Optional
 
 from dataset.base import BaseDataset
 from knowledge_system.base import KnowledgeBase
 from evaluator.base import Evaluator, EvaluationSample
+from run_artifacts import (
+    BASELINE_EVIDENCE_SCOPE,
+    BASELINE_RUN_KIND,
+    SCHEMA_VERSION,
+    RunArtifactWriter,
+    build_sample_id,
+    endpoint_identity,
+    load_sample_checkpoint,
+    repository_provenance,
+)
+from run_validation import validate_baseline_run
 
 
 def _normalize_query(query: Any) -> Optional[str]:
@@ -109,29 +122,464 @@ def extract_retrieval_queries(
     return _dedupe_queries(queries)
 
 
+def _trace_from_results(
+    search_results: List[Any],
+    fallback_trace: Optional[dict],
+) -> Optional[dict]:
+    """Read the trace attached to results, falling back to the KB client."""
+    for result in search_results:
+        trace = getattr(result, "trace", None)
+        if isinstance(trace, dict):
+            return trace
+    return fallback_trace if isinstance(fallback_trace, dict) else None
+
+
+def count_tool_calls(
+    search_results: List[Any],
+    fallback_trace: Optional[dict] = None,
+) -> int:
+    """Count actual agent tool calls in the captured trace."""
+    trace = _trace_from_results(search_results, fallback_trace)
+    if not trace:
+        return 0
+    tool_calls = trace.get("tool_calls")
+    if not isinstance(tool_calls, list):
+        return 0
+    count = 0
+    seen_ids = set()
+    for call in tool_calls:
+        if not isinstance(call, dict):
+            continue
+        call_id = call.get("id")
+        if call_id:
+            if call_id in seen_ids:
+                continue
+            seen_ids.add(call_id)
+        count += 1
+    return count
+
+
+def _runtime_config(kb: KnowledgeBase) -> Dict[str, Any]:
+    """Read optional runtime provenance without making it a hard dependency."""
+    getter = getattr(kb, "get_runtime_config", None)
+    if not callable(getter):
+        return {}
+    config = getter()
+    if not isinstance(config, dict):
+        raise TypeError("knowledge-base runtime config must be a dictionary")
+    return config
+
+
+def _evaluator_runtime_config(evaluator: Evaluator) -> Dict[str, Any]:
+    """Read optional evaluator provenance without credentials."""
+    getter = getattr(evaluator, "get_runtime_config", None)
+    if not callable(getter):
+        return {}
+    config = getter()
+    if not isinstance(config, dict):
+        raise TypeError("evaluator runtime config must be a dictionary")
+    sanitized = {
+        "model_name": config.get("model_name", ""),
+        "embedding_model": config.get("embedding_model", ""),
+        "endpoint": endpoint_identity(
+            config.get("endpoint") or config.get("base_url")
+        ),
+        "embedding_endpoint": endpoint_identity(
+            config.get("embedding_endpoint")
+            or config.get("embedding_base_url")
+        ),
+        "header_names": sorted(config.get("header_names") or []),
+        "embedding_header_names": sorted(
+            config.get("embedding_header_names") or []
+        ),
+    }
+    for flag in (
+        "model_explicit",
+        "api_key_explicit",
+        "base_url_explicit",
+        "model_separate_from_answer",
+        "api_key_separate_from_answer",
+        "endpoint_separate_from_answer",
+    ):
+        sanitized[flag] = config.get(flag) is True
+    return sanitized
+
+
 def build_run_manifest(
     kb_name: str,
     evaluator_name: str,
     dataset_name: str,
     retrieval_k: int,
     skip_load: bool,
+    runtime_config: Optional[Dict[str, Any]] = None,
+    runtime_config_error: Optional[str] = None,
+    evaluator_runtime_config: Optional[Dict[str, Any]] = None,
+    evaluator_runtime_config_error: Optional[str] = None,
+    run_kind: str = BASELINE_RUN_KIND,
 ) -> Dict[str, Any]:
     """Build a manifest capturing all key configuration for reproducibility."""
     from util import get_config
+
     config = get_config()
+    runtime_config = runtime_config or {}
+    evaluator_runtime_config = evaluator_runtime_config or {}
+    benchmark_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    prompt_max_searches = runtime_config.get("prompt_max_searches")
+    hard_max_tool_iterations = runtime_config.get("hard_max_tool_iterations")
+    if kb_name == "trpc-agent-go":
+        # These are the historical modified-harness defaults. The Go service
+        # snapshot should normally provide the same effective values.
+        if prompt_max_searches is None:
+            prompt_max_searches = 3
+        if hard_max_tool_iterations is None:
+            hard_max_tool_iterations = 500
+
     return {
+        "schema_version": SCHEMA_VERSION,
+        "run_kind": run_kind,
+        "evidence_scope": BASELINE_EVIDENCE_SCOPE,
+        "formal_ab_eligible": False,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "platform": platform.platform(),
         "python_version": platform.python_version(),
+        "command": shlex.join(sys.argv),
+        "working_directory": os.getcwd(),
         "knowledge_base": kb_name,
         "evaluator": evaluator_name,
         "dataset": dataset_name,
-        "model_name": config.get("model_name", ""),
-        "eval_model_name": config.get("eval_model_name", ""),
-        "embedding_model": config.get("embedding_model", ""),
+        "models": {
+            "answer": runtime_config.get("model_name")
+            or config.get("model_name", ""),
+            "judge": evaluator_runtime_config.get("model_name")
+            or config.get("eval_model_name", ""),
+            "embedding": runtime_config.get("embedding_model")
+            or config.get("embedding_model", ""),
+            "judge_embedding": evaluator_runtime_config.get(
+                "embedding_model"
+            )
+            or config.get("embedding_model", ""),
+        },
+        "endpoints": {
+            "answer": runtime_config.get("llm_endpoint")
+            or endpoint_identity(config.get("base_url")),
+            "judge": endpoint_identity(
+                evaluator_runtime_config.get("endpoint")
+                or config.get("eval_base_url")
+            ),
+            "embedding": runtime_config.get("embedding_endpoint")
+            or endpoint_identity(config.get("embedding_base_url")),
+            "judge_embedding": endpoint_identity(
+                evaluator_runtime_config.get("embedding_endpoint")
+                or config.get("embedding_base_url")
+            ),
+        },
+        "gateway_header_names": {
+            "answer": runtime_config.get("llm_header_names", []),
+            "judge": evaluator_runtime_config.get(
+                "header_names",
+                sorted((config.get("eval_headers") or {}).keys()),
+            ),
+            "embedding": runtime_config.get(
+                "embedding_header_names",
+                sorted((config.get("embedding_headers") or {}).keys()),
+            ),
+            "judge_embedding": evaluator_runtime_config.get(
+                "embedding_header_names",
+                sorted((config.get("embedding_headers") or {}).keys()),
+            ),
+        },
         "retrieval_k": retrieval_k,
         "skip_load": skip_load,
+        "index_policy": "reuse_existing" if skip_load else "rebuild",
+        "prompt_max_searches": prompt_max_searches,
+        "hard_max_tool_iterations": hard_max_tool_iterations,
+        "runtime_config": runtime_config,
+        "runtime_config_error": runtime_config_error,
+        "evaluator_runtime_config": evaluator_runtime_config,
+        "evaluator_runtime_config_error": evaluator_runtime_config_error,
+        "repositories": repository_provenance(benchmark_root),
     }
+
+
+def _set_effective_runtime_config(
+    manifest: Dict[str, Any],
+    runtime_config: Dict[str, Any],
+    runtime_config_error: Optional[str],
+) -> None:
+    """Update effective service fields after an index rebuild."""
+    manifest["runtime_config"] = runtime_config
+    manifest["runtime_config_error"] = runtime_config_error
+    if runtime_config_error:
+        return
+    if runtime_config.get("model_name"):
+        manifest["models"]["answer"] = runtime_config["model_name"]
+    if runtime_config.get("embedding_model"):
+        manifest["models"]["embedding"] = runtime_config[
+            "embedding_model"
+        ]
+    if runtime_config.get("prompt_max_searches") is not None:
+        manifest["prompt_max_searches"] = runtime_config[
+            "prompt_max_searches"
+        ]
+    if runtime_config.get("hard_max_tool_iterations") is not None:
+        manifest["hard_max_tool_iterations"] = runtime_config[
+            "hard_max_tool_iterations"
+        ]
+    if runtime_config.get("llm_endpoint"):
+        manifest["endpoints"]["answer"] = runtime_config["llm_endpoint"]
+    if runtime_config.get("embedding_endpoint"):
+        manifest["endpoints"]["embedding"] = runtime_config[
+            "embedding_endpoint"
+        ]
+    manifest["gateway_header_names"]["answer"] = runtime_config.get(
+        "llm_header_names",
+        [],
+    )
+    manifest["gateway_header_names"]["embedding"] = runtime_config.get(
+        "embedding_header_names",
+        manifest["gateway_header_names"]["embedding"],
+    )
+
+
+def _set_effective_evaluator_config(
+    manifest: Dict[str, Any],
+    evaluator_runtime_config: Dict[str, Any],
+    evaluator_runtime_config_error: Optional[str],
+) -> None:
+    """Update Judge fields for a fresh or replayed evaluation attempt."""
+    manifest["evaluator_runtime_config"] = evaluator_runtime_config
+    manifest[
+        "evaluator_runtime_config_error"
+    ] = evaluator_runtime_config_error
+    if evaluator_runtime_config_error:
+        return
+    if evaluator_runtime_config.get("model_name"):
+        manifest["models"]["judge"] = evaluator_runtime_config[
+            "model_name"
+        ]
+    if evaluator_runtime_config.get("embedding_model"):
+        manifest["models"]["judge_embedding"] = (
+            evaluator_runtime_config["embedding_model"]
+        )
+    if evaluator_runtime_config.get("endpoint"):
+        manifest["endpoints"]["judge"] = evaluator_runtime_config[
+            "endpoint"
+        ]
+    if evaluator_runtime_config.get("embedding_endpoint"):
+        manifest["endpoints"]["judge_embedding"] = (
+            evaluator_runtime_config["embedding_endpoint"]
+        )
+    manifest["gateway_header_names"]["judge"] = (
+        evaluator_runtime_config.get("header_names", [])
+    )
+    manifest["gateway_header_names"]["judge_embedding"] = (
+        evaluator_runtime_config.get("embedding_header_names", [])
+    )
+
+
+def _as_evaluation_samples(
+    sample_records: List[Dict[str, Any]],
+) -> List[EvaluationSample]:
+    """Convert durable sample records into the evaluator's input type."""
+    return [
+        EvaluationSample(
+            question=record["question"],
+            answer=record["answer"],
+            contexts=record["contexts"],
+            ground_truth=record["ground_truth"],
+        )
+        for record in sample_records
+    ]
+
+
+def _evaluate_samples(
+    evaluator: Evaluator,
+    samples: List[EvaluationSample],
+    diagnostics_path: Optional[str],
+) -> tuple[str, Optional[Dict[str, Any]], Optional[str], float]:
+    """Run an evaluator while preserving a structured failure result."""
+    previous_diagnostics_path = os.environ.get("RAGAS_DIAGNOSTICS_PATH")
+    if diagnostics_path:
+        os.environ["RAGAS_DIAGNOSTICS_PATH"] = diagnostics_path
+    if hasattr(evaluator, "last_metrics"):
+        evaluator.last_metrics = None
+
+    started = time.time()
+    try:
+        result = evaluator.evaluate(samples)
+        metrics = getattr(evaluator, "last_metrics", None)
+        if not isinstance(metrics, dict):
+            metrics = None
+        return result, metrics, None, time.time() - started
+    except Exception as error:
+        message = f"❌ Evaluation failed: {error}"
+        return message, None, str(error), time.time() - started
+    finally:
+        if diagnostics_path:
+            if previous_diagnostics_path is None:
+                os.environ.pop("RAGAS_DIAGNOSTICS_PATH", None)
+            else:
+                os.environ[
+                    "RAGAS_DIAGNOSTICS_PATH"
+                ] = previous_diagnostics_path
+
+
+def _finalize_run(
+    manifest: Dict[str, Any],
+    sample_records: List[Dict[str, Any]],
+    result: str,
+    metrics: Optional[Dict[str, Any]],
+    evaluation_error: Optional[str],
+    timing: Dict[str, Any],
+    writer: Optional[RunArtifactWriter],
+) -> Dict[str, Any]:
+    """Classify a run and persist the final manifest/result atomically."""
+    if metrics and isinstance(metrics.get("per_sample"), list):
+        for index, metric_record in enumerate(metrics["per_sample"]):
+            if (
+                isinstance(metric_record, dict)
+                and index < len(sample_records)
+            ):
+                metric_record["sample_id"] = sample_records[index][
+                    "sample_id"
+                ]
+
+    validation = validate_baseline_run(
+        manifest,
+        sample_records,
+        metrics,
+        evaluation_error=evaluation_error,
+    )
+    manifest["execution_status"] = validation["execution_status"]
+    manifest["evidence_status"] = validation["evidence_status"]
+    manifest["completed_at"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+    manifest["validation"] = validation
+
+    errors = [
+        {
+            "sample_id": record["sample_id"],
+            "question": record["question"],
+            "error": record.get("error"),
+            "time": record["elapsed_seconds"],
+        }
+        for record in sample_records
+        if record.get("status") != "success"
+    ]
+    sample_debug = [
+        {
+            "sample_id": record["sample_id"],
+            "question": record["question"],
+            "retrieval_queries": record["retrieval_queries"],
+            "tool_call_count": record["tool_call_count"],
+            "retrieved_context_count": record.get(
+                "retrieved_context_count"
+            ),
+        }
+        for record in sample_records
+    ]
+    output_data = {
+        "schema_version": SCHEMA_VERSION,
+        "run_id": manifest.get("run_id"),
+        "manifest": manifest,
+        "validation": validation,
+        "timing": timing,
+        "samples_count": len(sample_records),
+        "errors_count": len(errors),
+        "result": result,
+        "evaluation": {
+            "formatted_result": result,
+            "error": evaluation_error,
+            "metrics": metrics,
+        },
+        "samples": sample_records,
+        "errors": errors,
+        "sample_debug": sample_debug,
+    }
+    if writer:
+        writer.manifest.update(manifest)
+        writer.write_manifest()
+        writer.write_samples(sample_records)
+        writer.write_result(output_data)
+    return output_data
+
+
+def run_evaluator_only(
+    samples_input: str,
+    evaluator: Evaluator,
+    output_file: str,
+) -> str:
+    """Re-run only the judge from a durable Q&A checkpoint."""
+    checkpoint = load_sample_checkpoint(samples_input)
+    sample_records = checkpoint["samples"]
+    manifest = dict(checkpoint["manifest"])
+    expected_samples = int(manifest.get("expected_samples") or 0)
+    if len(sample_records) != expected_samples:
+        raise ValueError(
+            "evaluator-only mode requires a complete Q&A checkpoint: "
+            f"{len(sample_records)}/{expected_samples}"
+        )
+
+    evaluator_runtime_config: Dict[str, Any] = {}
+    evaluator_runtime_config_error = None
+    try:
+        evaluator_runtime_config = _evaluator_runtime_config(evaluator)
+    except Exception as error:
+        evaluator_runtime_config_error = str(error)
+    _set_effective_evaluator_config(
+        manifest,
+        evaluator_runtime_config,
+        evaluator_runtime_config_error,
+    )
+    manifest["execution_mode"] = "evaluator_only"
+    manifest["evaluation_replay"] = {
+        "source_checkpoint": os.path.abspath(samples_input),
+        "source_run_id": checkpoint.get("run_id"),
+        "source_run_fingerprint": checkpoint.get("run_fingerprint"),
+        "command": shlex.join(sys.argv),
+        "working_directory": os.getcwd(),
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    }
+    sample_ids = [record["sample_id"] for record in sample_records]
+    writer = RunArtifactWriter(output_file, manifest, sample_ids)
+    manifest = writer.manifest
+    writer.write_samples(sample_records)
+
+    samples = _as_evaluation_samples(sample_records)
+    result, metrics, evaluation_error, eval_time = _evaluate_samples(
+        evaluator,
+        samples,
+        writer.paths["diagnostics"],
+    )
+    qa_total_time = sum(
+        float(record.get("elapsed_seconds") or 0)
+        for record in sample_records
+    )
+    timing = {
+        "qa_total_seconds": round(qa_total_time, 2),
+        "qa_avg_seconds": round(
+            qa_total_time / len(sample_records) if sample_records else 0,
+            2,
+        ),
+        "eval_seconds": round(eval_time, 2),
+        "total_seconds": round(qa_total_time + eval_time, 2),
+        "qa_replayed": False,
+    }
+    output_data = _finalize_run(
+        manifest,
+        sample_records,
+        result,
+        metrics,
+        evaluation_error,
+        timing,
+        writer,
+    )
+    print(f"\n{result}")
+    print(
+        "\nEvidence status: "
+        f"{output_data['validation']['evidence_status']}"
+    )
+    print(f"📁 Results saved to: {output_file}")
+    return result
 
 
 def run_evaluation(
@@ -146,26 +594,28 @@ def run_evaluation(
     kb_name: str = "unknown",
     evaluator_name: str = "unknown",
     dataset_name: str = "unknown",
+    run_kind: str = BASELINE_RUN_KIND,
 ) -> str:
-    """
-    Run RAG evaluation with specified evaluator.
-
-    Args:
-        kb: Knowledge base instance implementing KnowledgeBase interface.
-        dataset: Dataset instance implementing BaseDataset interface.
-        evaluator: Evaluator instance implementing Evaluator interface.
-        retrieval_k: Number of documents to retrieve per query.
-        skip_load: If True, skip loading documents into knowledge base.
-        full_log: If True, print full answer results for each question.
-        output_file: Optional path to save evaluation results as JSON.
-        kb_name: Name of the knowledge base implementation (for manifest).
-        evaluator_name: Name of the evaluator (for manifest).
-        dataset_name: Name of the dataset (for manifest).
-
-    Returns:
-        Evaluation results as formatted string.
-    """
+    """Collect checkpointed Q&A samples, then evaluate and classify them."""
     print("=== RAG Evaluation ===\n")
+    print("1. Loading QA items...")
+    qa_items = dataset.load_qa_items()
+    print(f"   Loaded {len(qa_items)} QA items.\n")
+
+    runtime_config: Dict[str, Any] = {}
+    runtime_config_error = None
+    try:
+        runtime_config = _runtime_config(kb)
+    except Exception as error:
+        runtime_config_error = str(error)
+        print(f"   ⚠️  Runtime configuration unavailable: {error}")
+    evaluator_runtime_config: Dict[str, Any] = {}
+    evaluator_runtime_config_error = None
+    try:
+        evaluator_runtime_config = _evaluator_runtime_config(evaluator)
+    except Exception as error:
+        evaluator_runtime_config_error = str(error)
+        print(f"   ⚠️  Evaluator configuration unavailable: {error}")
 
     manifest = build_run_manifest(
         kb_name=kb_name,
@@ -173,182 +623,250 @@ def run_evaluation(
         dataset_name=dataset_name,
         retrieval_k=retrieval_k,
         skip_load=skip_load,
+        runtime_config=runtime_config,
+        runtime_config_error=runtime_config_error,
+        evaluator_runtime_config=evaluator_runtime_config,
+        evaluator_runtime_config_error=evaluator_runtime_config_error,
+        run_kind=run_kind,
     )
+    expected_sample_ids = [
+        build_sample_id(
+            dataset_name,
+            qa.question,
+            qa.answer,
+            sample_index=index,
+        )
+        for index, qa in enumerate(qa_items)
+    ]
+    writer = (
+        RunArtifactWriter(output_file, manifest, expected_sample_ids)
+        if output_file
+        else None
+    )
+    if writer:
+        manifest = writer.manifest
+        writer.write_samples([])
+    else:
+        manifest["expected_samples"] = len(expected_sample_ids)
+
     print("📋 Run Manifest:")
-    for k, v in manifest.items():
-        print(f"   {k}: {v}")
+    print(json.dumps(manifest, indent=2, ensure_ascii=False))
     print()
 
-    # Step 1: Load QA items
-    print("1. Loading QA items...")
-    qa_items = dataset.load_qa_items()
-    print(f"   Loaded {len(qa_items)} QA items.\n")
-
-    # Step 2: Load documents if needed
+    setup_error = None
     if skip_load:
         print("2. Skipping document loading (--skip-load enabled)...\n")
     else:
-        print("2. Loading documents...")
-        doc_dir = dataset.load_documents(force_reload=force_reload)
-
-        file_paths = []
-        for filename in sorted(os.listdir(doc_dir)):
-            filepath = os.path.join(doc_dir, filename)
-            if os.path.isfile(filepath):
-                file_paths.append(filepath)
-
-        print(f"   Found {len(file_paths)} documents (sorted for reproducibility).")
-
-        print("3. Building knowledge base...")
-        kb.load(file_paths)
-        print("   Knowledge base built.\n")
-
-    # Step 3: Run Q&A
-    print("4. Running Q&A with fresh sessions...")
-    samples = []
-    errors = []
-    qa_times = []
-    sample_debug = []
-    qa_start_total = time.time()
-
-    for i, qa in enumerate(qa_items):
-        print(f"\n   [{i + 1}/{len(qa_items)}] Q: {qa.question[:80]}...")
-        qa_start = time.time()
-
         try:
-            answer, search_results = kb.answer(qa.question, k=retrieval_k)
-            contexts = [r.content for r in search_results]
-
-            retrieval_queries = extract_retrieval_queries(
-                question=qa.question,
-                search_results=search_results,
-                fallback_trace=getattr(kb, "last_trace", None),
+            print("2. Loading documents...")
+            doc_dir = dataset.load_documents(force_reload=force_reload)
+            file_paths = [
+                os.path.join(doc_dir, filename)
+                for filename in sorted(os.listdir(doc_dir))
+                if os.path.isfile(os.path.join(doc_dir, filename))
+            ]
+            print(
+                f"   Found {len(file_paths)} documents "
+                "(sorted for reproducibility)."
             )
+            print("3. Building knowledge base...")
+            kb.load(file_paths)
+            print("   Knowledge base built.\n")
+            try:
+                refreshed_runtime_config = _runtime_config(kb)
+                _set_effective_runtime_config(
+                    manifest,
+                    refreshed_runtime_config,
+                    None,
+                )
+            except Exception as error:
+                runtime_config_error = str(error)
+                _set_effective_runtime_config(
+                    manifest,
+                    runtime_config,
+                    runtime_config_error,
+                )
+                print(
+                    "   ⚠️  Post-load runtime configuration "
+                    f"unavailable: {error}"
+                )
+            if writer:
+                writer.refresh_manifest(manifest)
+                manifest = writer.manifest
+                writer.write_samples([])
+        except Exception as error:
+            setup_error = str(error)
+            print(f"   ❌ Knowledge-base setup failed: {error}")
 
-            if not contexts:
-                print("   ⚠️  No contexts retrieved, using placeholder")
+    sample_records: List[Dict[str, Any]] = []
+    qa_start_total = time.time()
+    prompt_limit = manifest.get("prompt_max_searches")
+    if setup_error is None:
+        print("4. Running Q&A with fresh sessions...")
+        for index, qa in enumerate(qa_items):
+            print(
+                f"\n   [{index + 1}/{len(qa_items)}] "
+                f"Q: {qa.question[:80]}..."
+            )
+            qa_start = time.time()
+            status = "success"
+            error_message = None
+            retrieval_queries: List[str] = []
+            tool_call_count = 0
+            retrieved_context_count = 0
+            try:
+                answer, search_results = kb.answer(
+                    qa.question,
+                    k=retrieval_k,
+                )
+                fallback_trace = getattr(kb, "last_trace", None)
+                contexts = [result.content for result in search_results]
+                retrieved_context_count = len(contexts)
+                retrieval_queries = extract_retrieval_queries(
+                    question=qa.question,
+                    search_results=search_results,
+                    fallback_trace=fallback_trace,
+                )
+                tool_call_count = count_tool_calls(
+                    search_results,
+                    fallback_trace=fallback_trace,
+                )
+                if not contexts:
+                    print(
+                        "   ⚠️  No contexts retrieved, using placeholder"
+                    )
+                    contexts = ["No relevant context found."]
+            except Exception as error:
+                status = "agent_error"
+                error_message = str(error)
+                answer = "Error: failed to generate answer."
                 contexts = ["No relevant context found."]
 
             qa_elapsed = time.time() - qa_start
-            qa_times.append(qa_elapsed)
+            record = {
+                "sample_index": index,
+                "sample_id": expected_sample_ids[index],
+                "question": qa.question,
+                "ground_truth": qa.answer,
+                "source_document": getattr(qa, "source_doc", ""),
+                "answer": answer,
+                "contexts": contexts,
+                "retrieved_context_count": retrieved_context_count,
+                "retrieval_queries": retrieval_queries,
+                "tool_call_count": tool_call_count,
+                "exceeded_prompt_search_budget": (
+                    isinstance(prompt_limit, int)
+                    and tool_call_count > prompt_limit
+                ),
+                "status": status,
+                "error": error_message,
+                "elapsed_seconds": round(qa_elapsed, 6),
+            }
+            sample_records.append(record)
+            if writer:
+                writer.write_samples(sample_records)
 
-            print(f"   A: {answer[:200]}{'...' if len(answer) > 200 else ''}")
-            print(f"   Retrieved {len(search_results)} contexts, took {qa_elapsed:.2f}s")
-            if retrieval_queries:
-                print(f"   Retrieval queries ({len(retrieval_queries)}):")
-                for idx, query in enumerate(retrieval_queries, 1):
-                    print(f"      [{idx}] {query}")
+            if status == "success":
+                print(
+                    f"   A: {answer[:200]}"
+                    f"{'...' if len(answer) > 200 else ''}"
+                )
+                print(
+                    f"   Retrieved {retrieved_context_count} contexts, "
+                    f"{tool_call_count} tool calls, "
+                    f"took {qa_elapsed:.2f}s"
+                )
+                if retrieval_queries:
+                    print(
+                        f"   Retrieval queries "
+                        f"({len(retrieval_queries)}):"
+                    )
+                    for query_index, query in enumerate(
+                        retrieval_queries,
+                        1,
+                    ):
+                        print(f"      [{query_index}] {query}")
+                else:
+                    print("   Retrieval queries: unavailable")
+                if full_log:
+                    print("\n   === Full Answer ===")
+                    print(answer)
+                    print("\n   === Contexts ===")
+                    for context_index, context in enumerate(contexts, 1):
+                        print(f"\n   [{context_index}] {context}")
             else:
-                print("   Retrieval queries: unavailable")
-
-            if full_log:
-                print("\n   === Full Answer ===")
-                print(answer)
-                print("\n   === Contexts ===")
-                for j, ctx in enumerate(contexts, 1):
-                    print(f"\n   [{j}] {ctx}")
-
-            samples.append(
-                EvaluationSample(
-                    question=qa.question,
-                    answer=answer,
-                    contexts=contexts,
-                    ground_truth=qa.answer,
+                print(
+                    f"   ❌ Error: {error_message} "
+                    f"(took {qa_elapsed:.2f}s)"
                 )
-            )
-            sample_debug.append(
-                {
-                    "question": qa.question,
-                    "retrieval_queries": retrieval_queries,
-                }
-            )
-        except Exception as e:
-            qa_elapsed = time.time() - qa_start
-            print(f"   ❌ Error: {e} (took {qa_elapsed:.2f}s)")
-            errors.append({"question": qa.question, "error": str(e), "time": qa_elapsed})
-            # Preserve failed samples with placeholder values so that every
-            # framework is evaluated on the exact same question set.
-            samples.append(
-                EvaluationSample(
-                    question=qa.question,
-                    answer="Error: failed to generate answer.",
-                    contexts=["No relevant context found."],
-                    ground_truth=qa.answer,
-                )
-            )
-            sample_debug.append(
-                {
-                    "question": qa.question,
-                    "retrieval_queries": [],
-                }
-            )
 
     qa_total_time = time.time() - qa_start_total
+    avg_time = (
+        sum(record["elapsed_seconds"] for record in sample_records)
+        / len(sample_records)
+        if sample_records
+        else 0
+    )
+    agent_errors = sum(
+        record["status"] != "success" for record in sample_records
+    )
+    print(
+        f"\n   Collected {len(sample_records)} samples, "
+        f"{agent_errors} agent errors"
+    )
+    print(
+        f"   ⏱️  Q&A total time: {qa_total_time:.2f}s, "
+        f"avg per question: {avg_time:.2f}s"
+    )
 
-    if not samples:
-        error_msg = "❌ No samples collected. Cannot run evaluation."
-        print(f"\n{error_msg}")
-        return error_msg
+    samples = _as_evaluation_samples(sample_records)
+    evaluation_error = setup_error
+    metrics: Optional[Dict[str, Any]] = None
+    eval_time = 0.0
+    if setup_error:
+        result = f"❌ Knowledge-base setup failed: {setup_error}"
+    elif not samples:
+        evaluation_error = "no samples collected"
+        result = "❌ No samples collected. Cannot run evaluation."
+    else:
+        print("\n5. Running evaluation from persisted Q&A samples...")
+        result, metrics, evaluation_error, eval_time = _evaluate_samples(
+            evaluator,
+            samples,
+            writer.paths["diagnostics"] if writer else None,
+        )
 
-    avg_time = sum(qa_times) / len(qa_times) if qa_times else 0
-    print(f"\n   Collected {len(samples)} samples, {len(errors)} errors")
-    print(f"   ⏱️  Q&A total time: {qa_total_time:.2f}s, avg per question: {avg_time:.2f}s")
+    timing = {
+        "qa_total_seconds": round(qa_total_time, 2),
+        "qa_avg_seconds": round(avg_time, 2),
+        "eval_seconds": round(eval_time, 2),
+        "total_seconds": round(qa_total_time + eval_time, 2),
+        "qa_replayed": False,
+    }
+    output_data = _finalize_run(
+        manifest,
+        sample_records,
+        result,
+        metrics,
+        evaluation_error,
+        timing,
+        writer,
+    )
 
-    # Print all evaluation data
-    print("\n" + "=" * 80)
-    print("📋 EVALUATION DATA (for RAGAS)")
-    print("=" * 80)
-    for i, sample in enumerate(samples, 1):
-        print(f"\n{'─' * 80}")
-        print(f"📝 Sample {i}/{len(samples)}")
-        print(f"{'─' * 80}")
-        print(f"\n🔹 QUESTION:\n{sample.question}")
-        print(f"\n🔹 GROUND TRUTH:\n{sample.ground_truth}")
-        print(f"\n🔹 ANSWER:\n{sample.answer}")
-        print(f"\n🔹 CONTEXTS ({len(sample.contexts)} items):")
-        for j, ctx in enumerate(sample.contexts, 1):
-            ctx_preview = ctx[:200] + "..." if len(ctx) > 200 else ctx
-            print(f"   [{j}] {ctx_preview}")
-    print("\n" + "=" * 80)
-
-    # Step 4: Run evaluation
-    print("\n5. Running evaluation...")
-    eval_start = time.time()
-    try:
-        result = evaluator.evaluate(samples)
-    except Exception as e:
-        error_msg = f"❌ Evaluation failed: {e}"
-        print(f"\n{error_msg}")
-        return error_msg
-    eval_time = time.time() - eval_start
-
-    # Print results
     print(f"\n{result}")
     print("\n--- Timing ---")
-    print(f"Q&A total time: {qa_total_time:.2f}s (avg {avg_time:.2f}s/question)")
+    print(
+        f"Q&A total time: {qa_total_time:.2f}s "
+        f"(avg {avg_time:.2f}s/question)"
+    )
     print(f"Evaluation time: {eval_time:.2f}s")
     print(f"Total time: {qa_total_time + eval_time:.2f}s")
-
-    # Save results if specified
+    print(
+        "Evidence status: "
+        f"{output_data['validation']['evidence_status']}"
+    )
     if output_file:
-        output_data = {
-            "manifest": manifest,
-            "timing": {
-                "qa_total_seconds": round(qa_total_time, 2),
-                "qa_avg_seconds": round(avg_time, 2),
-                "eval_seconds": round(eval_time, 2),
-                "total_seconds": round(qa_total_time + eval_time, 2),
-            },
-            "samples_count": len(samples),
-            "errors_count": len(errors),
-            "result": result,
-            "errors": errors,
-            "sample_debug": sample_debug,
-        }
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(output_data, f, indent=2, ensure_ascii=False)
         print(f"\n📁 Results saved to: {output_file}")
-
     return result
 
 
@@ -390,6 +908,24 @@ def main():
         help="Output file path to save evaluation results as JSON",
     )
     parser.add_argument(
+        "--samples-input",
+        type=str,
+        default=None,
+        help=(
+            "Re-run only the evaluator from a .samples.json checkpoint; "
+            "requires --output and does not initialize a dataset or agent"
+        ),
+    )
+    parser.add_argument(
+        "--run-kind",
+        choices=[BASELINE_RUN_KIND],
+        default=BASELINE_RUN_KIND,
+        help=(
+            "Evidence lane for this command. I0 supports baseline "
+            "reproduction only."
+        ),
+    )
+    parser.add_argument(
         "--dataset",
         choices=["huggingface", "rgb", "multihop-rag"],
         default="huggingface",
@@ -420,6 +956,25 @@ def main():
         help="Number of concurrent workers for evaluation (default: 30)",
     )
     args = parser.parse_args()
+
+    # Initialize evaluator first so evaluator-only replay never constructs a
+    # dataset or knowledge-base client.
+    if args.evaluator == "ragas":
+        from evaluator.ragas.evaluator import RAGASEvaluator
+        evaluator = RAGASEvaluator(max_workers=args.workers, timeout=args.timeout)
+        print("Using RAGAS evaluator")
+    else:
+        raise ValueError(f"Unknown evaluator: {args.evaluator}")
+
+    if args.samples_input:
+        if not args.output:
+            parser.error("--samples-input requires --output")
+        run_evaluator_only(
+            samples_input=args.samples_input,
+            evaluator=evaluator,
+            output_file=args.output,
+        )
+        return
 
     # Initialize dataset
     from dataset import create_dataset
@@ -457,14 +1012,6 @@ def main():
         kb = LangChainKnowledgeBase()
         print("Using LangChain knowledge base")
 
-    # Initialize evaluator
-    if args.evaluator == "ragas":
-        from evaluator.ragas.evaluator import RAGASEvaluator
-        evaluator = RAGASEvaluator(max_workers=args.workers, timeout=args.timeout)
-        print("Using RAGAS evaluator")
-    else:
-        raise ValueError(f"Unknown evaluator: {args.evaluator}")
-
     # Run evaluation
     # --load overrides --skip-load
     skip_load = args.skip_load and not args.load
@@ -480,6 +1027,7 @@ def main():
         kb_name=args.kb,
         evaluator_name=args.evaluator,
         dataset_name=args.dataset,
+        run_kind=args.run_kind,
     )
 
 
