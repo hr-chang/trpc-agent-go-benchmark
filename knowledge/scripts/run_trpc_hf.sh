@@ -155,7 +155,13 @@ payload = {
     "port": int(os.environ["RUN_PORT"]),
     "search_mode": 0,
     "agent_model": os.environ.get("MODEL_NAME", ""),
-    "judge_model": os.environ.get("EVAL_MODEL_NAME", ""),
+    "agent_invoked": os.environ["RUN_MODE"] == "baseline",
+    "judge_model": (
+        os.environ.get("EVAL_MODEL_NAME", "")
+        if os.environ["RUN_MODE"] == "baseline"
+        else ""
+    ),
+    "judge_initialized": os.environ["RUN_MODE"] == "baseline",
     "embedding_model": os.environ["EMBEDDING_MODEL"],
 }
 path = Path(os.environ["RUN_DIR"]) / "run-environment.json"
