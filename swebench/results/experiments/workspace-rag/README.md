@@ -1438,3 +1438,28 @@ and
 Sanitized aggregate metrics, canonical and operational accounting, paired
 estimands, validation, limitations, and the decision are in
 [`v8-bge-m3-ast-no-preload-c500-result.json`](./v8-bge-m3-ast-no-preload-c500-result.json).
+
+## RAG-adapted AST Agent full-500 pre-registration
+
+V9 evaluates one new RAG Agent bundle on the canonical 500 cases. The bundle
+keeps a static task-start `ast-structured` index, removes initial workspace
+preload, puts on-demand `code_search` before Bash, minimally adapts the Agent
+prompt and action validator for multiple tools, and returns compact XML-like
+search observations while retaining raw structured retrieval telemetry outside
+the model context. Non-RAG Agent behavior remains unchanged.
+
+The two-case smoke is excluded from the estimate. After it passes artifact and
+official-harness checks, the formal run uses six Agent workers and the frozen
+GLM-5.2 high-effort and BGE-M3 hybrid configuration. Primary accounting is
+canonical model-side cost from one selected terminal artifact per case. Any
+non-Agent recovery membership must be frozen without consulting resolved
+quality; genuine Agent failures remain quality outcomes.
+
+V9 will be compared separately with Native E1 and Native E2. Their mean is not
+the primary comparator. Because V9 is a single sequential realization and its
+treatment is a bundle, differences cannot be attributed individually to AST,
+prompt text, tool order, XML formatting, or preload removal.
+
+The frozen design, smoke gate, recovery policy, canonical-cost rule, and claim
+boundary are in
+[`v9-bge-m3-ast-rag-agent-adapt-500-plan.json`](./v9-bge-m3-ast-rag-agent-adapt-500-plan.json).

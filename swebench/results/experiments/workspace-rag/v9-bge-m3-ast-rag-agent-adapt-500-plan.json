@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "status": "pre_registered",
+  "created_at": "2026-07-24",
+  "plan_id": "v9-ast-rag-agent-adapt-500-20260724",
+  "question": "What official-harness quality and canonical model-side cost does the RAG-adapted ast-structured Agent achieve on the canonical 500-case panel, and how does that single realization compare descriptively and separately with frozen Native E1 and Native E2?",
+  "authorization": {
+    "explicit_user_authorization": true,
+    "interpretation": "Run a two-case protocol smoke and then exactly one RAG-adapted ast-structured full-500 arm, recover only non-Agent failures quality-blind, run the official local harness, and compare canonical quality and cost separately with Native E1 and Native E2.",
+    "formal_replicate_count": 1,
+    "smoke_excluded_from_estimate": true
+  },
+  "inference_boundary": {
+    "design": "single new RAG realization with two frozen historical native realizations",
+    "treatment_bundle": [
+      "ast-structured task-start workspace index",
+      "on-demand code_search without initial workspace preload",
+      "minimal RAG-specific prompt adaptation",
+      "code_search before Bash in the model-visible tool order",
+      "code_search-only turns accepted by the RAG action validator",
+      "compact XML-like code_search observations"
+    ],
+    "causal_strength": "The run estimates the absolute end-to-end behavior of the frozen RAG bundle. Separate comparisons with Native E1 and Native E2 are historical full-panel contrasts, not randomized or concurrent treatment estimates.",
+    "prohibited_claims": [
+      "Do not attribute a V9-minus-native difference to AST, prompt text, tool order, XML formatting, or preload removal individually.",
+      "Do not average Native E1 and Native E2 as the primary control.",
+      "Do not describe one V9 realization as repeated or order-balanced evidence.",
+      "Do not use latency, index time, cache hits, embedding work, memory, disk, or Docker behavior as treatment-causal estimates.",
+      "Do not retroactively rewrite the V5-R no-expansion decision or reinterpret V8 as using this new Agent contract."
+    ],
+    "permitted_claims": [
+      "Absolute V9 official-harness resolved quality and canonical model-side cost on the canonical 500 cases.",
+      "Separate descriptive V9-minus-E1 and V9-minus-E2 quality and canonical-cost differences.",
+      "Separate instance-paired 2x2 resolved-outcome tables against E1 and E2, with uncertainty and historical-control limitations stated.",
+      "Descriptive aggregate LLM, tool, code_search, Bash, retrieval, index, embedding, cache, and operational profiles."
+    ]
+  },
+  "historical_native_controls": {
+    "source": "results/experiments/workspace-rag/v3-bge-m3-full500-r1.json",
+    "e1": {
+      "run_id": "tag-impl-full500-20260715-e1",
+      "case_count": 500,
+      "resolved": 383,
+      "resolved_rate": 0.766,
+      "canonical_total_tokens": 209803789,
+      "canonical_estimated_model_cost": 541.309256
+    },
+    "e2": {
+      "run_id": "tag-impl-full500-20260716-e2",
+      "case_count": 500,
+      "resolved": 399,
+      "resolved_rate": 0.798,
+      "canonical_total_tokens": 258800596,
+      "canonical_estimated_model_cost": 646.375208
+    },
+    "comparison_rule": "Report V9 against E1 and E2 separately; do not use their mean as the primary comparator."
+  },
+  "panel": {
+    "case_list": "data/case-lists/verified-test-500.case_ids.txt",
+    "case_count": 500,
+    "case_list_sha256": "a6b0fd7c8c2969a0eef892e032250adcfa6d32362d395c246930e61b575ac9b9",
+    "safe_cases": "data/generated/cases.jsonl",
+    "safe_cases_sha256": "4b2a050a82d356963320cbfa8e2efdf6a133af8863f31b291a973ab4dd349d07"
+  },
+  "smoke": {
+    "run_id": "tag-rag-ast-agentadapt-smoke2-20260724-r1",
+    "case_ids": [
+      "django__django-14349",
+      "scikit-learn__scikit-learn-10297"
+    ],
+    "agent_workers": 2,
+    "harness_workers": 2,
+    "excluded_from_formal_estimate": true,
+    "reuse_predictions_in_formal": false,
+    "gate": [
+      "Both cases produce terminal prediction artifacts without infrastructure, environment, artifact, or exhausted-transport error.",
+      "The manifest and recorded public fingerprints are complete and match the frozen plan.",
+      "code_search is enabled, workspace_preload is false, and workspace representation is ast-structured.",
+      "Both cases build a non-empty workspace index and report preload_injected=false with zero preloaded documents and characters.",
+      "The first model request exposes code_search before Bash.",
+      "Any observed code_search call has non-empty raw structured telemetry and a non-empty XML-like model observation.",
+      "The calibrated official harness exits zero with no harness error."
+    ],
+    "non_gate_note": "Resolved count is recorded but is not a smoke gate. A model trajectory is not required to call code_search in both smoke cases; deterministic integration tests cover the XML observation path."
+  },
+  "formal_run": {
+    "run_id": "tag-rag-ast-agentadapt-500-20260724-r1",
+    "workspace_representation": "ast-structured",
+    "workspace_representation_schema": "workspace-representation/v1;reader=python-ast;tests=include;hidden=include;paths=stable;fallback=file;embedding=structured-code",
+    "workspace_representation_sha256": "3178d3482124b20f29259fc59e8954975c44384e38779958118bf60b68748ec1"
+  },
+  "public_provenance": {
+    "source_revision": "aad40c5986eb710a1d840d1b11f8db0c806fe9cf",
+    "source_modified_required": false,
+    "framework_revision": "358d376784889fd539a764190e1970ee4f4fc5f6"
+  },
+  "rag_agent_contract": {
+    "non_rag_behavior": "unchanged",
+    "index_snapshot": "task_start",
+    "initial_workspace_preload": false,
+    "initial_problem_statement_retrieval": false,
+    "tool_order": [
+      "code_search",
+      "bash"
+    ],
+    "code_search_description": "Search the static task-start workspace index and return relevant source excerpts with paths, line ranges, and symbols. Results may reflect code before your edits.",
+    "code_search_arguments": "native JSON",
+    "code_search_model_observation": {
+      "format": "XML-like text",
+      "root": "code_search_results",
+      "root_snapshot_attribute": "task_start",
+      "result_attributes": [
+        "path",
+        "lines when reliable",
+        "symbol when reliable"
+      ],
+      "source_indentation": "preserved",
+      "model_hidden_fields": [
+        "rank",
+        "score",
+        "count",
+        "internal document or chunk id"
+      ]
+    },
+    "raw_retrieval_telemetry": "retained outside model-visible content",
+    "prompt_scope": "RAG-only minimal adaptation of the existing Agent prompt",
+    "action_validator": "A RAG response must contain at least one tool call; code_search-only and Bash turns are legal; native mode retains its prior Bash requirement.",
+    "graph_mode": false
+  },
+  "fixed_parameters": {
+    "model": "GLM-5.2",
+    "model_reasoning_effort": "high",
+    "embedding_model": "bge-m3",
+    "retrieval_mode": "hybrid",
+    "embedding_dimensions": 1024,
+    "embedding_batch_size": 64,
+    "embedding_concurrency": 1,
+    "embedding_cache_access": "readwrite",
+    "online_code_search_top_k": 6,
+    "online_code_search_global_max_chars": null,
+    "inactive_preload_max_results": 4,
+    "inactive_preload_max_chars": 6000,
+    "agent_workers": 6,
+    "observation_codec": "xml",
+    "code_search": true,
+    "workspace_preload": false,
+    "command_timeout": "1m",
+    "case_timeout": "2h",
+    "billing_tag": "rag-agentadapt500",
+    "experiment_id": "rag-agentadapt-20260724"
+  },
+  "launch_contract": {
+    "preflight_status": "pending",
+    "requirements": [
+      "The plan exists in a commit after the frozen source implementation revision, while the built benchmark source is exactly the recorded source revision.",
+      "The source and framework worktrees are clean and their revisions match this plan.",
+      "The formal output directory is absent and no competing formal runner is active.",
+      "Public data fingerprints and private model, embedding, and environment config fingerprints are frozen before launch without publishing secret values.",
+      "Resource headroom, cache integrity, managed httpbin, Docker, and runtime dependencies pass read-only preflight.",
+      "The two-case smoke passes its artifact and official-harness gate before the formal run starts."
+    ]
+  },
+  "failure_and_recovery": {
+    "canonical_experiment_count": 1,
+    "quality_blind_rule": "Freeze recovery membership from terminal status and infrastructure evidence before consulting official-harness quality labels or patch quality.",
+    "retain_without_rerun": [
+      "Every valid Submitted outcome, including an unresolved or empty patch produced by a completed Agent trajectory.",
+      "Audited genuine Agent failures such as a fixed model-call limit without an infrastructure symptom."
+    ],
+    "rerun": [
+      "Missing or corrupt artifacts.",
+      "Container, environment, or setup failure.",
+      "Exhausted model or embedding transport retries.",
+      "Host, resource, runner, or storage interruption not caused by a completed Agent outcome."
+    ],
+    "ambiguous_errors": "Pause and audit before consulting resolved status.",
+    "resume_contract": "Use the existing prediction set as the resume boundary only with identical arguments and fingerprints; never redo or overwrite valid terminal outcomes.",
+    "merge_contract": "If a separate recovery run is required, freeze its case membership quality-blind and merge exactly one selected terminal artifact per case deterministically.",
+    "no_second_replicate": true
+  },
+  "cost_accounting": {
+    "primary_scope": "canonical",
+    "canonical_rule": "Count model usage from exactly the one selected terminal artifact for each of the 500 canonical cases.",
+    "excluded_from_canonical": [
+      "abandoned or superseded infrastructure-failed attempts",
+      "unfinished in-flight attempts without a selected terminal artifact"
+    ],
+    "operational_disclosure": "Report known non-canonical attempt usage separately as an operational lower bound when reconstructable; do not mix it into the primary comparison.",
+    "rate_card": {
+      "unit_tokens": 1000000,
+      "cached_input": 2,
+      "uncached_input": 8,
+      "output": 28
+    },
+    "exclusions": "Embedding, indexing, host, storage, network, Docker, and labor costs are not included in estimated model cost."
+  },
+  "official_harness": {
+    "target": "tag",
+    "workers": 4,
+    "verifier_mode": "calibrated",
+    "cache_level": "instance",
+    "clean": false,
+    "apply_harness_compat": true,
+    "instances_from_predictions": true
+  },
+  "analysis": {
+    "primary": [
+      "V9 resolved count and rate out of 500.",
+      "V9 canonical estimated model cost and cost per resolved case.",
+      "V9-minus-E1 and V9-minus-E2 resolved-case and percentage-point differences, reported separately.",
+      "V9-minus-E1 and V9-minus-E2 canonical cost and cost-per-resolved differences, reported separately.",
+      "Separate paired both-resolved, native-only, V9-only, and neither-resolved tables against E1 and E2."
+    ],
+    "cost_decomposition": [
+      "Cached input, uncached input, and output token contributions to each cost difference.",
+      "LLM calls, prompt growth by turn, completion tokens, and terminal-call-limit cases.",
+      "Cost by each paired resolved-outcome cell against E1 and E2 separately."
+    ],
+    "tool_profile": [
+      "Total LLM and tool calls.",
+      "code_search calls, cases, raw-result bytes, and model-observation bytes.",
+      "Bash calls and command-family counts, including grep, find, cat, sed, and rg where observable.",
+      "Whether dynamic retrieval use is associated descriptively with fewer Bash discovery calls or lower context growth."
+    ],
+    "secondary": [
+      "Empty patches, genuine Agent errors, non-Agent recoveries, and harness errors.",
+      "Workspace coverage, documents, fallback, node types, duplicates, index, embedding, and cache aggregates.",
+      "Generation and harness latency and host-resource discontinuities as operational context only."
+    ]
+  },
+  "decision_rules": {
+    "descriptive_pareto_success": "V9 resolves at least 399 cases and canonical estimated model cost is below 541.309256 billing units, thereby matching the higher realized Native quality and beating the lower realized Native cost.",
+    "historically_pareto_dominated": "Record historical domination if E1 or E2 has at least the V9 resolved count and no greater canonical model cost, with at least one strict advantage.",
+    "mixed": "Any other result is a quality-cost tradeoff rather than evidence that the RAG bundle is jointly better.",
+    "next_step": "Even descriptive Pareto success may justify proposing, but does not automatically start, a same-revision repeated Native-versus-RAG control."
+  },
+  "publication_profile": {
+    "public_sanitized": true,
+    "aggregate_quality_and_cost_included": true,
+    "omitted": [
+      "verbatim user text",
+      "credentials and endpoints",
+      "absolute host paths and process identifiers",
+      "private binary and config fingerprints",
+      "raw artifact paths and hashes",
+      "per-instance quality outcomes"
+    ]
+  }
+}
