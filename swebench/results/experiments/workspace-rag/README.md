@@ -1463,3 +1463,125 @@ prompt text, tool order, XML formatting, or preload removal.
 The frozen design, smoke gate, recovery policy, canonical-cost rule, and claim
 boundary are in
 [`v9-bge-m3-ast-rag-agent-adapt-500-plan.json`](./v9-bge-m3-ast-rag-agent-adapt-500-plan.json).
+
+## RAG-adapted AST Agent full-500 result
+
+V9 completed the frozen 500-case panel with 500 `Submitted` generation
+outcomes, no generation error, and no empty patch. The official calibrated
+local harness completed all 500 instances and resolved **395/500 (79.0%)**,
+with 105 non-empty unresolved outcomes and no harness error.
+
+This is one sequential realization of the complete RAG Agent bundle. Native
+E1 and E2 are shown separately as same-panel historical comparisons, not as
+concurrent randomized controls. The bundle result cannot isolate the effect of
+AST, prompt text, tool order, XML-like search observations, or preload removal.
+
+### Canonical model cost
+
+| Run | Resolved | Total tokens | Canonical cost | Tokens / resolved | Cost / resolved |
+|---|---:|---:|---:|---:|---:|
+| Native E1 | 383 (76.6%) | 209,803,789 | 541.309256 | 547,790.57 | 1.413340 |
+| Native E2 | 399 (79.8%) | 258,800,596 | 646.375208 | 648,623.05 | 1.619988 |
+| **V9 RAG Agent bundle** | **395 (79.0%)** | **263,137,175** | **667.799416** | **666,170.06** | **1.690631** |
+
+Only the selected formal result for each of the 500 cases contributes to V9's
+canonical cost. The two-case smoke is excluded. No generation recovery or
+superseded case attempt was needed.
+
+| V9 minus historical run | Resolved | Total tokens | Canonical cost | Cached-input cost | Uncached-input cost | Output cost |
+|---|---:|---:|---:|---:|---:|---:|
+| E1 | +12 / +2.4pp | +53,333,386 (+25.42%) | +126.490160 (+23.37%) | +104.199936 | +4.898192 | +17.392032 |
+| E2 | -4 / -0.8pp | +4,336,579 (+1.68%) | +21.424208 (+3.31%) | +6.946048 | +3.880552 | +10.597608 |
+
+Against E1, 82.4% of the cost increase came from cached input. Against E2,
+V9 made 493 fewer LLM calls but still used more cached input, uncached input,
+and output tokens; output accounted for 49.5% of the remaining cost increase.
+Thus lower call count did not translate into lower model-side cost.
+
+The average first-call prompt was 1,923 tokens for V9 versus 1,607 for both
+Native runs. Average last-call prompts were 17,877 for V9, 15,706 for E1, and
+16,330 for E2; average first-to-last growth was 15,954, 14,099, and 14,723
+tokens respectively. V9 also had a lower p95 call count than both Native runs
+and no terminal call-limit case. Descriptively, the extra cost is carried by
+larger model contexts and output rather than simply by more calls; the bundled
+design does not identify which individual RAG adaptation caused that growth.
+
+### Separate paired historical comparisons
+
+V9 versus Native E1:
+
+| Paired outcome | Cases | E1 cost | V9 cost | V9 - E1 |
+|---|---:|---:|---:|---:|
+| Both resolved | 363 | 331.406564 | 442.533536 | +111.126972 |
+| E1 only resolved | 20 | 52.522956 | 58.301432 | +5.778476 |
+| V9 only resolved | 32 | 51.602492 | 50.046428 | -1.556064 |
+| Neither resolved | 85 | 105.777244 | 116.918020 | +11.140776 |
+
+The realized difference is +12 resolved cases at +126.490160 cost. Exact
+two-sided McNemar p=0.1263; the paired Wald 95% interval for the resolved-rate
+difference is -0.42 to +5.22 percentage points. This is a quality-cost
+tradeoff, not joint improvement.
+
+V9 versus Native E2:
+
+| Paired outcome | Cases | E2 cost | V9 cost | V9 - E2 |
+|---|---:|---:|---:|---:|
+| Both resolved | 366 | 321.742560 | 425.039092 | +103.296532 |
+| E2 only resolved | 33 | 82.937776 | 73.198800 | -9.738976 |
+| V9 only resolved | 29 | 132.511820 | 67.540872 | -64.970948 |
+| Neither resolved | 72 | 109.183052 | 102.020652 | -7.162400 |
+
+The realized difference is -4 resolved cases at +21.424208 cost. Exact
+two-sided McNemar p=0.7035; the paired Wald 95% interval is -3.89 to +2.29
+percentage points. Native E2 therefore has both higher realized quality and
+lower canonical cost than V9.
+
+### Tool and retrieval profile
+
+V9 made 696 `code_search` calls across 387 cases and returned 3,777 source
+documents. Raw structured results occupied 3,177,296 bytes; the XML-like
+model observations occupied 1,692,977 bytes, 46.72% fewer. This byte reduction
+is not a direct token or causal quality estimate.
+
+| Run | Bash calls | grep | find | cat | sed | rg |
+|---|---:|---:|---:|---:|---:|---:|
+| Native E1 | 14,048 | 3,153 | 452 | 2,550 | 3,494 | 0 |
+| Native E2 | 14,707 | 3,509 | 460 | 2,668 | 3,450 | 0 |
+| V9 | 13,453 | 3,238 | 325 | 2,482 | 3,486 | 0 |
+
+Each command-family count is multi-label presence per Bash call and the family
+columns are not additive. V9 used fewer total Bash, `find`, and `cat` calls
+than both Native runs, but `grep` exceeded E1 and `sed` was effectively
+unchanged. On-demand retrieval therefore did not uniformly replace Bash
+discovery, and the lower Bash count did not overcome the larger model context
+and output cost.
+
+The 500 AST indexes contained 13,704,528 documents. They covered 699,544 of
+699,590 eligible files, with no all-fallback case. The same 46 missing-file
+counts across eight cases are the frozen scanner/reader accounting differences
+already diagnosed in earlier AST runs. Embedding and cache errors and cache
+corruptions were zero; the aggregate cache hit rate was 99.9954%. Initial
+workspace preload was disabled for every case.
+
+### Decision and evidence notes
+
+V9 did **not** meet the pre-registered descriptive Pareto target. It improved
+on E1 quality only by accepting materially higher canonical cost, while the E2
+historical realization was both more accurate and cheaper. Do not promote the
+bundle by default, automatically start another run, revise the V5-R
+no-expansion decision, or claim that an individual RAG component caused the
+observed result.
+
+The first harness controller launch failed before evaluating any case because
+its inherited Go workspace did not include the isolated benchmark worktree.
+Predictions were untouched, and the canonical harness then completed all 500
+cases under the frozen quality settings. The formal SAR memory time series was
+not created; periodic resource snapshots and process-time evidence remain.
+This limits operational resource reconstruction but does not affect the
+complete quality result or canonical model-usage accounting. The runner
+manifest also omitted its top-level source-revision field; launch attestation
+and a clean frozen source worktree independently verify the public revision.
+
+Sanitized aggregate quality, canonical cost, paired cells, tool/retrieval
+metrics, integrity checks, evidence gaps, and the decision are in
+[`v9-bge-m3-ast-rag-agent-adapt-500-result.json`](./v9-bge-m3-ast-rag-agent-adapt-500-result.json).

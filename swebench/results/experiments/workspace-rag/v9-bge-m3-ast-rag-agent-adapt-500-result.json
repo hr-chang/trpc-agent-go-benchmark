@@ -1,0 +1,589 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "evidence_status": "complete_for_primary_quality_and_canonical_cost_with_resource_monitoring_gap",
+  "completed_on": "2026-07-25",
+  "result_id": "v9-bge-m3-ast-rag-agent-adapt-500",
+  "question": "What official-harness quality and canonical model-side cost does the RAG-adapted ast-structured Agent achieve on the canonical 500-case panel, and how does that single realization compare descriptively and separately with frozen Native E1 and Native E2?",
+  "inference_scope": {
+    "design": "single new RAG realization with two frozen historical native realizations",
+    "new_arm": "RAG-adapted ast-structured Agent bundle",
+    "panel": "canonical SWE-bench Verified 500-case panel",
+    "historical_comparison": "instance-paired on the same panel, but sequential and non-concurrent",
+    "repeated_full_panel_evidence": false,
+    "treatment_bundle": [
+      "ast-structured task-start workspace index",
+      "on-demand code_search without initial workspace preload",
+      "minimal RAG-specific prompt adaptation",
+      "code_search before Bash in model-visible tool order",
+      "code_search-only turns accepted by the RAG action validator",
+      "compact XML-like code_search observations"
+    ],
+    "claim_boundary": [
+      "The V9 absolute quality and canonical model-side cost are complete full-panel observations.",
+      "V9-minus-E1 and V9-minus-E2 are separate historical contrasts, not randomized or concurrent treatment estimates.",
+      "The bundle result cannot be attributed individually to AST, prompt text, tool order, XML formatting, or preload removal.",
+      "Native E1 and E2 are not averaged as the primary comparator."
+    ]
+  },
+  "protocol": {
+    "plan": "results/experiments/workspace-rag/v9-bge-m3-ast-rag-agent-adapt-500-plan.json",
+    "smoke": {
+      "terminal_predictions": 2,
+      "code_search_cases": 2,
+      "official_harness_resolved": 2,
+      "official_harness_errors": 0,
+      "excluded_from_formal_estimate": true,
+      "predictions_reused_in_formal": false
+    },
+    "generation_recovery": {
+      "required": false,
+      "selected_cases": 0,
+      "valid_terminal_artifacts_rerun": false
+    },
+    "harness_controller_attempts": {
+      "first_attempt": {
+        "instances_evaluated": 0,
+        "classification": "controller environment failure before evaluation",
+        "cause": "The inherited Go workspace did not include the isolated benchmark worktree.",
+        "predictions_modified": false
+      },
+      "canonical_attempt": {
+        "status": "completed",
+        "frozen_quality_parameters_unchanged": true
+      }
+    }
+  },
+  "public_provenance": {
+    "source_revision": "aad40c5986eb710a1d840d1b11f8db0c806fe9cf",
+    "framework_revision": "358d376784889fd539a764190e1970ee4f4fc5f6",
+    "case_list": "data/case-lists/verified-test-500.case_ids.txt",
+    "case_count": 500,
+    "case_list_sha256": "a6b0fd7c8c2969a0eef892e032250adcfa6d32362d395c246930e61b575ac9b9"
+  },
+  "fixed_parameters": {
+    "model": "GLM-5.2",
+    "reasoning_effort": "high",
+    "embedding_model": "bge-m3",
+    "retrieval_mode": "hybrid",
+    "embedding_dimensions": 1024,
+    "embedding_batch_size": 64,
+    "embedding_concurrency": 1,
+    "embedding_cache_access": "readwrite",
+    "online_code_search_top_k": 6,
+    "agent_workers": 6,
+    "observation_codec": "xml",
+    "code_search": true,
+    "workspace_preload": false,
+    "tool_order": [
+      "code_search",
+      "bash"
+    ],
+    "command_timeout": "1m",
+    "case_timeout": "2h",
+    "workspace_representation": "ast-structured",
+    "workspace_representation_schema": "workspace-representation/v1;reader=python-ast;tests=include;hidden=include;paths=stable;fallback=file;embedding=structured-code"
+  },
+  "generation_integrity": {
+    "case_count": 500,
+    "prediction_count": 500,
+    "response_trace_count": 500,
+    "status_counts": {
+      "Submitted": 500,
+      "Error": 0
+    },
+    "empty_patches": 0,
+    "agent_errors": 0,
+    "terminal_call_limit_cases": 0,
+    "non_agent_generation_failures": 0,
+    "manifest_status": "completed",
+    "fingerprints_match": true,
+    "canonical_case_membership_matches_frozen_panel": true,
+    "valid_terminal_artifacts_rerun": false,
+    "source_revision_evidence": {
+      "launch_attestation_present": true,
+      "clean_source_worktree_verified": true,
+      "runner_manifest_top_level_source_revision_present": false,
+      "interpretation": "The source revision is independently fixed by the launch attestation and clean worktree; the runner manifest omission is a provenance-field limitation rather than source drift."
+    }
+  },
+  "official_harness": {
+    "status": "completed",
+    "implementation": "official SWE-bench local harness",
+    "target": "tag",
+    "workers": 4,
+    "verifier_mode": "calibrated",
+    "cache_level": "instance",
+    "clean": false,
+    "apply_harness_compat": true,
+    "instances_from_predictions": true,
+    "total_instances": 500,
+    "submitted_instances": 500,
+    "completed_instances": 500,
+    "resolved_instances": 395,
+    "resolved_rate": 0.79,
+    "unresolved_nonempty_instances": 105,
+    "empty_patch_instances": 0,
+    "error_instances": 0,
+    "verifier_exit_code": 0,
+    "unstopped_case_containers": 0,
+    "duration_ms": 4490509
+  },
+  "model_metrics": {
+    "llm_calls": 13336,
+    "prompt_tokens": 258915719,
+    "cached_input_tokens": 253621184,
+    "uncached_input_tokens": 5294535,
+    "completion_tokens": 4221456,
+    "total_tokens": 263137175,
+    "rate_card": {
+      "cached_input_per_million": 2.0,
+      "uncached_input_per_million": 8.0,
+      "output_per_million": 28.0
+    },
+    "cost_components": {
+      "cached_input": 507.242368,
+      "uncached_input": 42.35628,
+      "output": 118.200768
+    },
+    "estimated_cost": 667.799416,
+    "cost_currency": "billing_unit",
+    "tokens_per_resolved": 666170.0632911392,
+    "cost_per_resolved": 1.6906314329113923,
+    "mean_per_llm_call": {
+      "prompt_tokens": 19414.79596580684,
+      "cached_input_tokens": 19017.78524295141,
+      "uncached_input_tokens": 397.0107228554289,
+      "completion_tokens": 316.54589082183566,
+      "estimated_cost": 0.050074941211757644
+    }
+  },
+  "prompt_growth_by_case_trajectory": {
+    "metric": "model-reported prompt tokens at the first and last LLM call of each 500-case trajectory",
+    "runs": {
+      "e1": {
+        "calls_per_case": {
+          "mean": 26.18,
+          "median": 19.5,
+          "p95_nearest_rank": 72,
+          "max": 250
+        },
+        "first_call_prompt_tokens": {
+          "mean": 1607.142,
+          "median": 1453.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 15706.334,
+          "median": 9268.0
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 14099.192,
+          "median": 7702.0
+        }
+      },
+      "e2": {
+        "calls_per_case": {
+          "mean": 27.658,
+          "median": 20.0,
+          "p95_nearest_rank": 73,
+          "max": 250
+        },
+        "first_call_prompt_tokens": {
+          "mean": 1607.142,
+          "median": 1453.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 16329.75,
+          "median": 9638.5
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 14722.608,
+          "median": 8129.0
+        }
+      },
+      "v9": {
+        "calls_per_case": {
+          "mean": 26.672,
+          "median": 20.0,
+          "p95_nearest_rank": 69,
+          "max": 159
+        },
+        "first_call_prompt_tokens": {
+          "mean": 1923.142,
+          "median": 1769.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 17876.79,
+          "median": 10629.0
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 15953.648,
+          "median": 8748.5
+        }
+      }
+    },
+    "interpretation": "V9 had fewer mean calls than E2 and a lower p95 call count than both Native runs, but its first, last, and absolute prompt-growth means were larger. This locates the observed cost increase in larger model contexts as well as output, without attributing the difference to an individual bundle component."
+  },
+  "historical_native_comparisons": {
+    "source": "results/experiments/workspace-rag/v3-bge-m3-full500-r1.json",
+    "comparison_rule": "Compare V9 with E1 and E2 separately; do not use their mean as the primary comparator.",
+    "e1": {
+      "native": {
+        "resolved": 383,
+        "resolved_rate": 0.766,
+        "unresolved_nonempty": 115,
+        "empty": 2,
+        "harness_errors": 0,
+        "llm_calls": 13090,
+        "tool_calls": 14048,
+        "prompt_tokens": 206203477,
+        "cached_input_tokens": 201521216,
+        "uncached_input_tokens": 4682261,
+        "completion_tokens": 3600312,
+        "total_tokens": 209803789,
+        "estimated_cost": 541.309256,
+        "cost_per_resolved": 1.413340093994778
+      },
+      "v9_minus_native": {
+        "resolved_cases": 12,
+        "resolved_rate_percentage_points": 2.4,
+        "llm_calls": 246,
+        "tool_calls": 101,
+        "cached_input_tokens": 52099968,
+        "uncached_input_tokens": 612274,
+        "completion_tokens": 621144,
+        "total_tokens": 53333386,
+        "total_tokens_percent": 25.420601913,
+        "cost_components": {
+          "cached_input": 104.199936,
+          "uncached_input": 4.898192,
+          "output": 17.392032
+        },
+        "estimated_cost": 126.49016,
+        "estimated_cost_percent": 23.3674482,
+        "cost_per_resolved": 0.2772913389166143,
+        "cost_per_resolved_percent": 19.6195763563783
+      },
+      "paired_outcomes": {
+        "both_resolved": 363,
+        "native_only_resolved": 20,
+        "v9_only_resolved": 32,
+        "neither_resolved": 85,
+        "exact_mcnemar_two_sided_p": 0.12634707581392135,
+        "paired_difference_95_percent_interval": {
+          "method": "paired Wald interval over per-instance V9-minus-native binary differences",
+          "lower_percentage_points": -0.42173655083614264,
+          "upper_percentage_points": 5.221736550836143
+        }
+      },
+      "paired_cell_cost": {
+        "both_resolved": {
+          "cases": 363,
+          "native": 331.406564,
+          "v9": 442.533536,
+          "v9_minus_native": 111.126972
+        },
+        "native_only_resolved": {
+          "cases": 20,
+          "native": 52.522956,
+          "v9": 58.301432,
+          "v9_minus_native": 5.778476
+        },
+        "v9_only_resolved": {
+          "cases": 32,
+          "native": 51.602492,
+          "v9": 50.046428,
+          "v9_minus_native": -1.556064
+        },
+        "neither_resolved": {
+          "cases": 85,
+          "native": 105.777244,
+          "v9": 116.91802,
+          "v9_minus_native": 11.140776
+        }
+      },
+      "classification": "quality-cost tradeoff",
+      "historically_pareto_dominated": false
+    },
+    "e2": {
+      "native": {
+        "resolved": 399,
+        "resolved_rate": 0.798,
+        "unresolved_nonempty": 95,
+        "empty": 5,
+        "harness_errors": 1,
+        "llm_calls": 13829,
+        "tool_calls": 14707,
+        "prompt_tokens": 254957626,
+        "cached_input_tokens": 250148160,
+        "uncached_input_tokens": 4809466,
+        "completion_tokens": 3842970,
+        "total_tokens": 258800596,
+        "estimated_cost": 646.375208,
+        "cost_per_resolved": 1.6199879899749374
+      },
+      "v9_minus_native": {
+        "resolved_cases": -4,
+        "resolved_rate_percentage_points": -0.8,
+        "llm_calls": -493,
+        "tool_calls": -558,
+        "cached_input_tokens": 3473024,
+        "uncached_input_tokens": 485069,
+        "completion_tokens": 378486,
+        "total_tokens": 4336579,
+        "total_tokens_percent": 1.675644905,
+        "cost_components": {
+          "cached_input": 6.946048,
+          "uncached_input": 3.880552,
+          "output": 10.597608
+        },
+        "estimated_cost": 21.424208,
+        "estimated_cost_percent": 3.314515739,
+        "cost_per_resolved": 0.07064344293645486,
+        "cost_per_resolved_percent": 4.36073868285578
+      },
+      "paired_outcomes": {
+        "both_resolved": 366,
+        "native_only_resolved": 33,
+        "v9_only_resolved": 29,
+        "neither_resolved": 72,
+        "exact_mcnemar_two_sided_p": 0.7035366713552734,
+        "paired_difference_95_percent_interval": {
+          "method": "paired Wald interval over per-instance V9-minus-native binary differences",
+          "lower_percentage_points": -3.8889048898983076,
+          "upper_percentage_points": 2.2889048898983075
+        }
+      },
+      "paired_cell_cost": {
+        "both_resolved": {
+          "cases": 366,
+          "native": 321.74256,
+          "v9": 425.039092,
+          "v9_minus_native": 103.296532
+        },
+        "native_only_resolved": {
+          "cases": 33,
+          "native": 82.937776,
+          "v9": 73.1988,
+          "v9_minus_native": -9.738976
+        },
+        "v9_only_resolved": {
+          "cases": 29,
+          "native": 132.51182,
+          "v9": 67.540872,
+          "v9_minus_native": -64.970948
+        },
+        "neither_resolved": {
+          "cases": 72,
+          "native": 109.183052,
+          "v9": 102.020652,
+          "v9_minus_native": -7.1624
+        }
+      },
+      "classification": "historically Pareto dominated by E2",
+      "historically_pareto_dominated": true
+    }
+  },
+  "agent_metrics": {
+    "tool_calls": 14149,
+    "case_duration_ms": {
+      "aggregate": 107647833,
+      "count": 500,
+      "min": 13786,
+      "mean": 215295.666,
+      "median": 135129.5,
+      "p95_nearest_rank": 718705,
+      "max": 1940326
+    }
+  },
+  "retrieval_metrics": {
+    "preload_injected_cases": 0,
+    "code_search_calls": 696,
+    "code_search_responses": 696,
+    "case_runs_with_code_search": 387,
+    "raw_retrieved_documents": 3777,
+    "code_search_raw_result_bytes": 3177296,
+    "code_search_model_observation_bytes": 1692977,
+    "model_observation_vs_raw_byte_ratio": 0.5328357823759574,
+    "format_interpretation": "The XML-like model observation used 46.72% fewer bytes than raw structured retrieval telemetry, but bytes are not a direct token or causal quality estimate."
+  },
+  "bash_tool_profile": {
+    "metric": "bash_tool_call_command_text_standalone_token_presence_multilabel",
+    "notes": "Each Bash call can match multiple command families, so family counts are not additive.",
+    "runs": {
+      "e1": {
+        "bash_calls": 14048,
+        "grep": 3153,
+        "find": 452,
+        "cat": 2550,
+        "sed": 3494,
+        "rg": 0
+      },
+      "e2": {
+        "bash_calls": 14707,
+        "grep": 3509,
+        "find": 460,
+        "cat": 2668,
+        "sed": 3450,
+        "rg": 0
+      },
+      "v9": {
+        "bash_calls": 13453,
+        "grep": 3238,
+        "find": 325,
+        "cat": 2482,
+        "sed": 3486,
+        "rg": 0
+      }
+    },
+    "interpretation": "V9 used fewer total Bash calls and fewer find and cat calls than both Native runs. Grep exceeded E1 while remaining below E2, and sed was effectively unchanged, so code_search did not uniformly replace Bash discovery."
+  },
+  "workspace_index": {
+    "successful_cases": 500,
+    "representation": "ast-structured",
+    "retrieval_mode": "hybrid",
+    "documents": 13704528,
+    "eligible_files": 699590,
+    "indexed_files": 699544,
+    "missing_files": 46,
+    "file_coverage_min": 0.9809417040358744,
+    "file_coverage_mean": 0.9999096148323009,
+    "cases_below_full_coverage": 8,
+    "eligible_indexed_count_mismatch_cases": 8,
+    "eligible_indexed_hash_mismatch_cases": 8,
+    "all_fallback_cases": 0,
+    "fallback_documents": 18380,
+    "fallback_document_rate": 0.0013411625705022456,
+    "fallback_reasons": {
+      "no_nodes": 18096,
+      "parse_error": 284
+    },
+    "node_types": {
+      "Class": 2455870,
+      "Function": 2575672,
+      "Interface": 478,
+      "Method": 7324748,
+      "Variable": 1329380,
+      "file": 18380
+    },
+    "content_chars": 6747758849,
+    "embedding_text_chars": 11749853448,
+    "duplicate_documents": 773592,
+    "duplicate_document_rate_weighted": 0.05644791268987885,
+    "preload_injected_cases": 0,
+    "duration_ms": {
+      "aggregate": 34734201,
+      "count": 500,
+      "min": 1736,
+      "mean": 69468.402,
+      "median": 89487.5,
+      "p95_nearest_rank": 102595,
+      "max": 141784
+    },
+    "coverage_mismatch_diagnosis": {
+      "total_missing_files": 46,
+      "case_count": 8,
+      "classification": "Frozen scanner/reader accounting differences; no runtime index loss or all-fallback case was observed."
+    }
+  },
+  "embedding": {
+    "requests": 637,
+    "batch_requests": 0,
+    "inputs": 637,
+    "errors": 0,
+    "prompt_tokens": 637,
+    "total_tokens": 637,
+    "duration_ms": 29539
+  },
+  "embedding_cache": {
+    "requests": 215080,
+    "batch_requests": 214384,
+    "inputs": 13705224,
+    "hits": 13704587,
+    "misses": 637,
+    "hit_rate": 0.9999535213725803,
+    "writes": 637,
+    "errors": 0,
+    "corruptions": 0,
+    "bytes_read": 55547146240,
+    "bytes_written": 2609152,
+    "read_duration_ms": 2010454,
+    "write_duration_ms": 1457
+  },
+  "transport": {
+    "model_retry_log_lines": 0,
+    "embedding_retry_attempt_1_of_3": 0,
+    "embedding_retry_attempt_2_of_3": 0,
+    "embedding_retry_attempt_3_of_3": 0,
+    "http_502_log_lines": 0,
+    "final_embedding_errors": 0,
+    "fatal_log_lines": 0,
+    "panic_log_lines": 0,
+    "oom_log_lines": 0
+  },
+  "operational_accounting": {
+    "canonical_terminal_artifacts": 500,
+    "canonical_generation_attempts_per_selected_case": 1,
+    "formal_smoke_usage_included": false,
+    "noncanonical_generation_usage_included": false,
+    "generation_wall_duration_ms": 18065001,
+    "official_harness_duration_ms": 4490509,
+    "first_harness_controller_attempt_model_usage": 0,
+    "resource_monitoring": {
+      "formal_sar_memory_log_available": false,
+      "periodic_resource_snapshots_available": true,
+      "process_time_summary_available": true,
+      "exact_host_resource_values_publicly_omitted": true,
+      "primary_endpoint_impact": "none",
+      "interpretation": "The missing SAR time series limits operational resource reconstruction but does not affect the complete official-harness outcome or canonical model-usage accounting."
+    }
+  },
+  "validation": {
+    "prediction_count_matches_panel": true,
+    "response_trace_count_matches_panel": true,
+    "all_generation_outcomes_submitted": true,
+    "canonical_fingerprints_match": true,
+    "official_harness_exit_zero": true,
+    "official_harness_error_zero": true,
+    "binary_quality_outcome_available_for_all_500": true,
+    "embedding_errors_zero": true,
+    "cache_errors_zero": true,
+    "cache_corruptions_zero": true,
+    "usage_matches_import": true,
+    "llm_calls_match_import_api_calls": true,
+    "prompt_growth_analysis_complete": true,
+    "terminal_call_limit_cases_zero": true,
+    "code_search_calls_match_responses": true,
+    "paired_case_sets_match": true,
+    "paired_cell_counts_sum_to_500": true,
+    "paired_cell_costs_sum_to_run_totals": true,
+    "json_parse": true,
+    "metric_consistency_assertions": true,
+    "case_list_sha256_verified": true
+  },
+  "decision": {
+    "absolute_full_panel_complete": true,
+    "descriptive_pareto_success": false,
+    "historically_pareto_dominated_by_e2": true,
+    "recommend_default_promotion": false,
+    "recommend_automatic_followup_run": false,
+    "revise_v5r_no_expansion": false,
+    "reasons": [
+      "V9 resolved 395/500 (79.0%) at 667.799416 canonical billing units.",
+      "Against E1, V9 resolved 12 more cases but cost 126.490160 more units, a quality-cost tradeoff rather than joint improvement.",
+      "Against E2, V9 resolved four fewer cases and cost 21.424208 more units, so E2 has both higher realized quality and lower canonical cost.",
+      "V9 used fewer Bash calls than both Native runs, but the model-facing trajectory still carried more total token and cost than either run.",
+      "One sequential bundle realization and historical controls do not support component-level causal attribution."
+    ],
+    "conclusion": "Record the 79.0% absolute RAG bundle profile and its separate historical comparisons. The bundle did not achieve the target of improving resolved quality while lowering canonical model cost, and no automatic promotion or further run is authorized by this result."
+  },
+  "limitations": [
+    "One stochastic V9 realization; no V9 run-to-run variance estimate.",
+    "Native E1 and E2 are sequential historical controls rather than concurrent randomized arms.",
+    "The treatment is a bundle and cannot isolate AST, prompt, tool order, XML result formatting, or preload removal.",
+    "Canonical model cost excludes embedding, indexing, host, storage, network, Docker, and labor costs.",
+    "The formal SAR resource time series is missing; periodic snapshots and process-time evidence remain, so this is an operational telemetry gap rather than a quality or model-cost gap.",
+    "The runner manifest omits a top-level source_revision; the frozen revision is instead verified through launch attestation and a clean source worktree.",
+    "The first harness controller attempt failed before evaluating any case because of an inherited workspace mismatch; predictions were untouched and the canonical harness subsequently completed all 500 cases under frozen quality settings."
+  ]
+}
