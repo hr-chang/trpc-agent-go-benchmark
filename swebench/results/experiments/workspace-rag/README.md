@@ -1585,3 +1585,33 @@ and a clean frozen source worktree independently verify the public revision.
 Sanitized aggregate quality, canonical cost, paired cells, tool/retrieval
 metrics, integrity checks, evidence gaps, and the decision are in
 [`v9-bge-m3-ast-rag-agent-adapt-500-result.json`](./v9-bge-m3-ast-rag-agent-adapt-500-result.json).
+
+## RAG-adapted AST Agent repeated full-500 pre-registration
+
+V10 prospectively adds exactly two full-500 replicates, R2 and R3, to the
+completed V9 R1 result. Source, framework, binary, case membership and order,
+model, RAG configuration, six-worker generation, XML observations, timeouts,
+canonical rate card, and official harness settings remain fixed.
+
+Execution is strictly serial and non-adaptive. R2 generation is checked only
+for integrity and infrastructure evidence before R3 generation starts; neither
+prospective official-harness quality result is inspected until both prediction
+sets are complete. Genuine Agent failures remain canonical outcomes, while
+only non-Agent failures may be recovered under the quality-blind rule.
+
+Each run is reported separately. The three-run summary includes run-level
+quality and cost ranges, per-case success counts from zero to three, and all
+three pairwise agreement and resolved-set Jaccard values. The 1,500 case-runs
+are repeated observations of the same 500 cases, not independent samples, and
+an at-least-once union is only a retry-oracle diagnostic. Native E1 and E2 stay
+separate historical contexts rather than being averaged.
+
+The original frontier target is retained: an individual run must resolve at
+least 399 cases while costing less than 541.309256 canonical billing units.
+Only if at least two of the three individual RAG runs meet both conditions may
+the extension be called repeatable descriptive frontier success. No result
+automatically promotes the bundle or starts another experiment.
+
+The frozen replicate IDs, serial execution rule, recovery contract, analysis,
+decision thresholds, and publication boundary are in
+[`v10-bge-m3-ast-rag-agent-adapt-r2-r3-plan.json`](./v10-bge-m3-ast-rag-agent-adapt-r2-r3-plan.json).

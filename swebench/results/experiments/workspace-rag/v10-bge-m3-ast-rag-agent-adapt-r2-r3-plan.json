@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "status": "pre_registered",
+  "created_at": "2026-07-25",
+  "plan_id": "v10-ast-rag-agent-adapt-r2-r3-20260725",
+  "question": "Across three executions of the frozen RAG-adapted ast-structured Agent bundle, including completed V9 R1 and two prospective replicates R2 and R3, how stable are official-harness quality, canonical model-side cost, per-case outcomes, and tool behavior?",
+  "authorization": {
+    "explicit_user_authorization": true,
+    "prospective_replicates": 2,
+    "completed_reference_replicates": 1,
+    "total_replicates_after_completion": 3,
+    "interpretation": "Run exactly two additional full-500 replicates of the completed V9 configuration, strictly serially, without outcome-adaptive stopping."
+  },
+  "replicates": {
+    "r1_completed": {
+      "run_id": "tag-rag-ast-agentadapt-500-20260724-r1",
+      "result": "results/experiments/workspace-rag/v9-bge-m3-ast-rag-agent-adapt-500-result.json",
+      "resolved": 395,
+      "resolved_rate": 0.79,
+      "canonical_total_tokens": 263137175,
+      "canonical_estimated_model_cost": 667.799416
+    },
+    "r2_prospective": {
+      "run_id": "tag-rag-ast-agentadapt-500-20260724-r2",
+      "status": "planned"
+    },
+    "r3_prospective": {
+      "run_id": "tag-rag-ast-agentadapt-500-20260724-r3",
+      "status": "planned"
+    }
+  },
+  "execution_order": {
+    "strictly_serial": true,
+    "sequence": [
+      "R2 generation",
+      "R2 generation-integrity verification without official quality labels",
+      "R3 generation",
+      "R3 generation-integrity verification",
+      "R2 official harness and import",
+      "R3 official harness and import",
+      "three-replicate analysis"
+    ],
+    "r3_launch_rule": "Launch R3 after R2 generation integrity passes, without consulting R2 official-harness resolved labels or canonical cost.",
+    "outcome_adaptive_stopping": false,
+    "quality_blinding_note": "Both prospective prediction sets are completed before either prospective official-harness quality result is inspected."
+  },
+  "inference_boundary": {
+    "design": "one completed and two prospective sequential replicates of one frozen RAG bundle",
+    "purpose": "Characterize same-arm stochastic stability and cost; not a same-revision Native-versus-RAG control.",
+    "treatment_bundle": [
+      "ast-structured task-start workspace index",
+      "on-demand code_search without initial workspace preload",
+      "minimal RAG-specific prompt adaptation",
+      "code_search before Bash in model-visible tool order",
+      "code_search-only turns accepted by the RAG action validator",
+      "compact XML-like code_search observations"
+    ],
+    "prohibited_claims": [
+      "Do not treat 1500 case-runs as 1500 independent cases.",
+      "Do not merge the best outcome per case into a single-run resolved rate.",
+      "Do not average Native E1 and Native E2 as the primary comparator.",
+      "Do not claim causal RAG-versus-Native or component-level effects from sequential historical comparisons.",
+      "Do not attribute differences individually to AST, prompt text, tool order, XML formatting, or preload removal.",
+      "Do not fold embedding, indexing, host, storage, network, Docker, or labor into canonical model cost.",
+      "Do not claim that an observed three-run range estimates future-run variance beyond this model, service, and environment window."
+    ]
+  },
+  "panel": {
+    "case_list": "data/case-lists/verified-test-500.case_ids.txt",
+    "case_count_per_replicate": 500,
+    "case_order_fixed": true,
+    "case_list_sha256": "a6b0fd7c8c2969a0eef892e032250adcfa6d32362d395c246930e61b575ac9b9",
+    "safe_cases": "data/generated/cases.jsonl",
+    "safe_cases_sha256": "4b2a050a82d356963320cbfa8e2efdf6a133af8863f31b291a973ab4dd349d07"
+  },
+  "public_provenance": {
+    "source_revision": "aad40c5986eb710a1d840d1b11f8db0c806fe9cf",
+    "source_modified_required": false,
+    "framework_revision": "358d376784889fd539a764190e1970ee4f4fc5f6"
+  },
+  "fixed_parameters": {
+    "model": "GLM-5.2",
+    "model_reasoning_effort": "high",
+    "embedding_model": "bge-m3",
+    "retrieval_mode": "hybrid",
+    "embedding_dimensions": 1024,
+    "embedding_batch_size": 64,
+    "embedding_concurrency": 1,
+    "embedding_cache_access": "readwrite",
+    "online_code_search_top_k": 6,
+    "online_code_search_global_max_chars": null,
+    "agent_workers": 6,
+    "observation_codec": "xml",
+    "code_search": true,
+    "workspace_preload": false,
+    "tool_order": [
+      "code_search",
+      "bash"
+    ],
+    "workspace_representation": "ast-structured",
+    "workspace_representation_schema": "workspace-representation/v1;reader=python-ast;tests=include;hidden=include;paths=stable;fallback=file;embedding=structured-code",
+    "workspace_representation_sha256": "3178d3482124b20f29259fc59e8954975c44384e38779958118bf60b68748ec1",
+    "command_timeout": "1m",
+    "case_timeout": "2h",
+    "billing_tag": "rag-agentadapt500",
+    "experiment_id": "rag-agentadapt-20260724"
+  },
+  "private_fingerprint_contract": {
+    "binary_sha256": "verify against the frozen V9 launch attestation without publishing in the final public result",
+    "model_config_sha256": "verify privately",
+    "embedding_config_sha256": "verify privately",
+    "environment_config_sha256": "verify privately",
+    "go_workspace_sha256": "verify privately",
+    "require_exact_match_before_each_replicate": true
+  },
+  "smoke": {
+    "new_smoke_required": false,
+    "reason": "R1 completed 500 generation outcomes and an official 500-case harness under the same immutable source, framework, binary, and integration contract; R2 and R3 still require full fingerprint and resource preflight."
+  },
+  "failure_and_recovery": {
+    "canonical_result_count_per_case_per_replicate": 1,
+    "quality_blind_rule": "Freeze recovery membership from terminal status and infrastructure evidence before consulting official-harness quality labels or patch quality.",
+    "retain_without_rerun": [
+      "Every valid Submitted outcome, including an unresolved or empty patch produced by a completed Agent trajectory.",
+      "Audited genuine Agent failures such as a fixed model-call limit without an infrastructure symptom."
+    ],
+    "rerun": [
+      "Missing or corrupt artifacts.",
+      "Container, environment, or setup failure.",
+      "Exhausted model or embedding transport retries.",
+      "Host, resource, runner, or storage interruption not caused by a completed Agent outcome."
+    ],
+    "ambiguous_errors": "Pause and audit before consulting resolved status.",
+    "resume_contract": "Use the existing prediction set as the resume boundary only with identical arguments and fingerprints; never redo or overwrite valid terminal outcomes.",
+    "worker_amendment": "Keep six workers. A lower-worker quality-blind recovery is allowed only after a documented resource interruption and an execution-only amendment; it is not a new replicate.",
+    "resource_authorization": "If evidenced OOM or storage risk appears, precisely remove only safe experiment-owned orphan or completed-case containers and rebuildable images after freezing deletion membership and evidence. Never remove active cases, managed httpbin, volumes, raw evidence, or unrelated resources, and never use unbounded global prune."
+  },
+  "generation_gate": {
+    "required_per_replicate": [
+      "500 unique canonical terminal artifacts matching the frozen case list",
+      "complete manifest, progress, predictions, and response traces",
+      "all public and private fingerprints match",
+      "every Error is classified as genuine Agent or non-Agent before harness",
+      "all non-Agent failures are quality-blindly recovered",
+      "no valid terminal artifact is rerun or overwritten"
+    ],
+    "pause_conditions": [
+      "source, framework, binary, config, panel, or argument drift",
+      "ambiguous generation error",
+      "persistent or exhausted transport failure",
+      "missing or corrupt evidence",
+      "uncontrolled OOM or storage risk"
+    ]
+  },
+  "cost_accounting": {
+    "primary_scope": "canonical per replicate",
+    "canonical_rule": "Count model usage from exactly one selected terminal artifact for each of 500 cases in each replicate.",
+    "rate_card": {
+      "unit_tokens": 1000000,
+      "cached_input": 2,
+      "uncached_input": 8,
+      "output": 28
+    },
+    "noncanonical_attempts": "Report reconstructable abandoned infrastructure-attempt usage separately as an operational lower bound; never mix it into canonical comparison.",
+    "exclusions": "Embedding, indexing, host, storage, network, Docker, and labor costs are excluded."
+  },
+  "official_harness": {
+    "run_after_both_prospective_generations_complete": true,
+    "target": "tag",
+    "workers": 4,
+    "verifier_mode": "calibrated",
+    "cache_level": "instance",
+    "clean": false,
+    "apply_harness_compat": true,
+    "instances_from_predictions": true,
+    "required_per_replicate": "exit zero, 500 completed instances, zero harness error, and a binary resolved outcome for all 500 cases"
+  },
+  "analysis": {
+    "per_replicate": [
+      "Resolved count and rate out of 500.",
+      "Canonical cached-input, uncached-input, output, and total tokens and cost.",
+      "Cost per resolved case, LLM calls, tool calls, prompt growth, and terminal-call-limit cases.",
+      "Empty patches, genuine Agent errors, non-Agent recoveries, and harness errors.",
+      "code_search, Bash command-family, index, embedding, cache, and operational profiles."
+    ],
+    "three_replicate_summary": [
+      "Resolved case-runs out of 1500 and pooled descriptive rate, explicitly not an independent-case estimate.",
+      "Sum canonical cost, mean cost per run, and cost per pooled resolved case-run.",
+      "Run-level mean, median, minimum, and maximum for resolved, rate, total tokens, cost, and cost per resolved.",
+      "Per-case success-count distribution for zero, one, two, or three resolved outcomes.",
+      "Stable unresolved, variable, and stable resolved case counts.",
+      "Pairwise binary agreement and resolved-set Jaccard for R1-R2, R1-R3, and R2-R3, plus mean, median, and range.",
+      "Three-way resolved intersection and union only as stability diagnostics."
+    ],
+    "historical_native_context": {
+      "source": "results/experiments/workspace-rag/v3-bge-m3-full500-r1.json",
+      "e1": {
+        "resolved": 383,
+        "resolved_rate": 0.766,
+        "canonical_estimated_model_cost": 541.309256
+      },
+      "e2": {
+        "resolved": 399,
+        "resolved_rate": 0.798,
+        "canonical_estimated_model_cost": 646.375208
+      },
+      "rule": "For each RAG replicate, report E1 and E2 separately with quality/cost deltas, paired 2x2 outcomes, and paired-cell canonical cost. Summarize three run-wise deltas by median and range; never duplicate a Native row into an independent pooled analysis."
+    },
+    "oracle_note": "At-least-once resolved union may be reported only as a retry-oracle diagnostic, never as single-run quality."
+  },
+  "decision_rules": {
+    "per_replicate_descriptive_frontier_target": "resolved >= 399 and canonical estimated model cost < 541.309256",
+    "repeatable_descriptive_frontier_success": "At least two of three individual RAG replicates independently meet both frontier conditions.",
+    "per_replicate_e2_domination": "Native E2 has at least the replicate resolved count and no greater canonical model cost, with at least one strict advantage.",
+    "repeatable_historical_e2_domination": "At least two of three individual RAG replicates satisfy the E2-domination condition.",
+    "otherwise": "Classify as mixed repeated descriptive evidence.",
+    "automatic_default_promotion": false,
+    "automatic_additional_run": false
+  },
+  "publication_profile": {
+    "public_sanitized": true,
+    "aggregate_quality_cost_and_stability_included": true,
+    "omitted": [
+      "verbatim user text",
+      "credentials and endpoints",
+      "absolute host paths and process identifiers",
+      "private binary and config fingerprints",
+      "raw artifact paths and hashes",
+      "per-instance quality outcomes"
+    ]
+  }
+}
