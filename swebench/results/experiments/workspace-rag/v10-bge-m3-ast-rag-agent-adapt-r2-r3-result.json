@@ -1,0 +1,1253 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "evidence_status": "complete_for_primary_quality_canonical_cost_and_three_replicate_stability",
+  "completed_on": "2026-07-25",
+  "result_id": "v10-bge-m3-ast-rag-agent-adapt-r2-r3",
+  "question": "Across three executions of the frozen RAG-adapted ast-structured Agent bundle, including completed V9 R1 and two prospective replicates R2 and R3, how stable are official-harness quality, canonical model-side cost, per-case outcomes, and tool behavior?",
+  "inference_scope": {
+    "design": "one completed and two prospectively registered sequential replicates of one frozen RAG bundle",
+    "panel": "the same canonical SWE-bench Verified 500-case panel in every replicate",
+    "case_runs": 1500,
+    "independent_cases": 500,
+    "purpose": "characterize same-arm stochastic stability and canonical model-side cost, not estimate a same-revision Native-versus-RAG causal effect",
+    "treatment_bundle": [
+      "ast-structured task-start workspace index",
+      "on-demand code_search without initial workspace preload",
+      "minimal RAG-specific prompt adaptation",
+      "code_search before Bash in model-visible tool order",
+      "code_search-only turns accepted by the RAG action validator",
+      "compact XML-like code_search observations"
+    ],
+    "claim_boundary": [
+      "The three executions provide observed same-bundle run-to-run variation in this model, service, and environment window.",
+      "The 1500 case-runs are repeated observations of 500 cases, not 1500 independent cases.",
+      "The bundle result cannot isolate AST, prompt text, tool order, XML formatting, or preload removal.",
+      "Native E1 and E2 remain separate historical contexts and are not averaged as a primary control.",
+      "The at-least-once resolved union is a retry-oracle diagnostic, not a single-run resolved rate."
+    ]
+  },
+  "protocol": {
+    "plan": "results/experiments/workspace-rag/v10-bge-m3-ast-rag-agent-adapt-r2-r3-plan.json",
+    "reference_result": "results/experiments/workspace-rag/v9-bge-m3-ast-rag-agent-adapt-500-result.json",
+    "execution_order_followed": true,
+    "prospective_generations_completed_before_quality_inspection": true,
+    "outcome_adaptive_stopping": false,
+    "new_smoke_required": false,
+    "replicate_order": [
+      "R1",
+      "R2",
+      "R3"
+    ],
+    "official_harness": {
+      "implementation": "official SWE-bench local harness",
+      "target": "tag",
+      "workers": 4,
+      "verifier_mode": "calibrated",
+      "cache_level": "instance",
+      "clean": false,
+      "apply_harness_compat": true,
+      "instances_from_predictions": true
+    },
+    "generation_recovery": {
+      "r1": {
+        "required": false,
+        "selected_cases": 0
+      },
+      "r2": {
+        "required": false,
+        "selected_cases": 0
+      },
+      "r3": {
+        "required": true,
+        "selected_cases": 1,
+        "classification": "quality-blind non-Agent transport recovery",
+        "original_artifacts_overwritten": false,
+        "quality_labels_consulted_before_membership": false,
+        "amendment_required": false
+      }
+    }
+  },
+  "public_provenance": {
+    "source_revision": "aad40c5986eb710a1d840d1b11f8db0c806fe9cf",
+    "framework_revision": "358d376784889fd539a764190e1970ee4f4fc5f6",
+    "case_list": "data/case-lists/verified-test-500.case_ids.txt",
+    "case_count_per_replicate": 500,
+    "case_list_sha256": "a6b0fd7c8c2969a0eef892e032250adcfa6d32362d395c246930e61b575ac9b9"
+  },
+  "fixed_parameters": {
+    "model": "GLM-5.2",
+    "reasoning_effort": "high",
+    "embedding_model": "bge-m3",
+    "retrieval_mode": "hybrid",
+    "embedding_dimensions": 1024,
+    "embedding_batch_size": 64,
+    "embedding_concurrency": 1,
+    "embedding_cache_access": "readwrite",
+    "online_code_search_top_k": 6,
+    "online_code_search_global_max_chars": null,
+    "agent_workers": 6,
+    "observation_codec": "xml",
+    "code_search": true,
+    "workspace_preload": false,
+    "tool_order": [
+      "code_search",
+      "bash"
+    ],
+    "command_timeout": "1m",
+    "case_timeout": "2h",
+    "workspace_representation": "ast-structured",
+    "workspace_representation_schema": "workspace-representation/v1;reader=python-ast;tests=include;hidden=include;paths=stable;fallback=file;embedding=structured-code"
+  },
+  "replicates": {
+    "r1": {
+      "run_id": "tag-rag-ast-agentadapt-500-20260724-r1",
+      "role": "completed V9 reference replicate",
+      "generation_integrity": {
+        "case_count": 500,
+        "prediction_count": 500,
+        "response_trace_count": 500,
+        "status_counts": {
+          "Submitted": 500,
+          "Error": 0
+        },
+        "empty_patches": 0,
+        "agent_errors": 0,
+        "terminal_call_limit_cases": 0,
+        "non_agent_failures": 0,
+        "recovered_cases": 0,
+        "manifest_status": "completed",
+        "fingerprints_match": true,
+        "valid_terminal_artifacts_rerun": false
+      },
+      "official_harness": {
+        "status": "completed",
+        "submitted_instances": 500,
+        "completed_instances": 500,
+        "resolved_instances": 395,
+        "resolved_rate": 0.79,
+        "unresolved_nonempty_instances": 105,
+        "empty_patch_instances": 0,
+        "error_instances": 0,
+        "verifier_exit_code": 0,
+        "duration_ms": 4490509
+      },
+      "model_metrics": {
+        "llm_calls": 13336,
+        "prompt_tokens": 258915719,
+        "cached_input_tokens": 253621184,
+        "uncached_input_tokens": 5294535,
+        "completion_tokens": 4221456,
+        "total_tokens": 263137175,
+        "cost_components": {
+          "cached_input": 507.242368,
+          "uncached_input": 42.35628,
+          "output": 118.200768
+        },
+        "estimated_cost": 667.799416,
+        "tokens_per_resolved": 666170.0632911392,
+        "cost_per_resolved": 1.6906314329113923
+      },
+      "agent_metrics": {
+        "executed_tool_calls": 14149,
+        "case_duration_ms": {
+          "aggregate": 107647833,
+          "count": 500,
+          "min": 13786,
+          "mean": 215295.666,
+          "median": 135129.5,
+          "p95_nearest_rank": 718705,
+          "max": 1940326
+        }
+      },
+      "operational_accounting": {
+        "canonical_tokens": 263137175,
+        "canonical_cost": 667.799416,
+        "known_actual_attempt_tokens_lower_bound": 263137175,
+        "known_actual_attempt_cost_lower_bound": 667.799416,
+        "generation_wall_duration_ms": 18065001,
+        "resource_time_series_available": false
+      }
+    },
+    "r2": {
+      "run_id": "tag-rag-ast-agentadapt-500-20260724-r2",
+      "role": "prospectively registered replicate",
+      "generation_integrity": {
+        "case_count": 500,
+        "prediction_count": 500,
+        "response_trace_count": 500,
+        "status_counts": {
+          "Submitted": 500,
+          "Error": 0
+        },
+        "empty_patches": 0,
+        "agent_errors": 0,
+        "terminal_call_limit_cases": 0,
+        "non_agent_failures": 0,
+        "recovered_cases": 0,
+        "manifest_status": "completed",
+        "fingerprints_match": true,
+        "valid_terminal_artifacts_rerun": false
+      },
+      "official_harness": {
+        "status": "completed",
+        "submitted_instances": 500,
+        "completed_instances": 500,
+        "resolved_instances": 395,
+        "resolved_rate": 0.79,
+        "unresolved_nonempty_instances": 105,
+        "empty_patch_instances": 0,
+        "error_instances": 0,
+        "verifier_exit_code": 0,
+        "duration_ms": 4471043
+      },
+      "model_metrics": {
+        "llm_calls": 13205,
+        "prompt_tokens": 229132419,
+        "cached_input_tokens": 223995072,
+        "uncached_input_tokens": 5137347,
+        "completion_tokens": 3786131,
+        "total_tokens": 232918550,
+        "cost_components": {
+          "cached_input": 447.990144,
+          "uncached_input": 41.098776,
+          "output": 106.011668
+        },
+        "estimated_cost": 595.100588,
+        "tokens_per_resolved": 589667.2151898735,
+        "cost_per_resolved": 1.5065837670886075
+      },
+      "agent_metrics": {
+        "executed_tool_calls": 13915,
+        "case_duration_ms": {
+          "aggregate": 99674697,
+          "count": 500,
+          "min": 13074,
+          "mean": 199349.394,
+          "median": 139270,
+          "p95_nearest_rank": 554492,
+          "max": 1745632
+        }
+      },
+      "operational_accounting": {
+        "canonical_tokens": 232918550,
+        "canonical_cost": 595.100588,
+        "known_actual_attempt_tokens_lower_bound": 232918550,
+        "known_actual_attempt_cost_lower_bound": 595.100588,
+        "generation_wall_duration_ms": 16722994,
+        "resource_time_series_available": true,
+        "oom_or_storage_pause": false
+      }
+    },
+    "r3": {
+      "run_id": "tag-rag-ast-agentadapt-500-20260724-r3",
+      "role": "prospectively registered replicate",
+      "generation_integrity": {
+        "primary_status_counts": {
+          "Submitted": 499,
+          "Error": 1
+        },
+        "primary_non_agent_failures": 1,
+        "quality_blind_recovery_membership": 1,
+        "recovery_status_counts": {
+          "Submitted": 1,
+          "Error": 0
+        },
+        "canonical_case_count": 500,
+        "canonical_prediction_count": 500,
+        "canonical_response_trace_count": 500,
+        "canonical_status_counts": {
+          "Submitted": 500,
+          "Error": 0
+        },
+        "canonical_empty_patches": 0,
+        "canonical_agent_errors": 0,
+        "terminal_call_limit_cases": 0,
+        "canonical_non_agent_failures": 0,
+        "manifest_status": "completed",
+        "fingerprints_match": true,
+        "primary_artifacts_immutable": true,
+        "canonical_selection_rule": "499 primary terminal artifacts plus one selected recovery artifact"
+      },
+      "official_harness": {
+        "status": "completed",
+        "prediction_source": "quality-blind canonical selection",
+        "submitted_instances": 500,
+        "completed_instances": 500,
+        "resolved_instances": 398,
+        "resolved_rate": 0.796,
+        "unresolved_nonempty_instances": 102,
+        "empty_patch_instances": 0,
+        "error_instances": 0,
+        "verifier_exit_code": 0,
+        "duration_ms": 4461463
+      },
+      "model_metrics": {
+        "llm_calls": 13068,
+        "prompt_tokens": 243523154,
+        "cached_input_tokens": 237288192,
+        "uncached_input_tokens": 6234962,
+        "completion_tokens": 3861181,
+        "total_tokens": 247384335,
+        "cost_components": {
+          "cached_input": 474.576384,
+          "uncached_input": 49.879696,
+          "output": 108.113068
+        },
+        "estimated_cost": 632.569148,
+        "tokens_per_resolved": 621568.6809045227,
+        "cost_per_resolved": 1.589369718592965
+      },
+      "agent_metrics": {
+        "executed_tool_calls": 13688,
+        "case_duration_ms": {
+          "aggregate": 118507421,
+          "count": 500,
+          "min": 10965,
+          "mean": 237014.842,
+          "median": 137393,
+          "p95_nearest_rank": 600386,
+          "max": 4108103
+        }
+      },
+      "operational_accounting": {
+        "canonical_tokens": 247384335,
+        "canonical_cost": 632.569148,
+        "excluded_non_agent_attempt_tokens": 28153007,
+        "excluded_non_agent_attempt_cost": 68.439028,
+        "selected_recovery_tokens": 451760,
+        "selected_recovery_cost": 1.298348,
+        "known_actual_attempt_tokens_lower_bound": 275537342,
+        "known_actual_attempt_cost_lower_bound": 701.008176,
+        "primary_generation_wall_duration_ms": 20874727,
+        "recovery_generation_wall_duration_ms": 294706,
+        "operational_generation_wall_duration_ms": 21169433,
+        "resource_time_series_available": true,
+        "oom_or_storage_pause": false
+      }
+    }
+  },
+  "rate_card": {
+    "unit_tokens": 1000000,
+    "cached_input": 2,
+    "uncached_input": 8,
+    "output": 28,
+    "currency": "billing_unit",
+    "exclusions": "Embedding, indexing, host, storage, network, Docker, and labor costs are excluded."
+  },
+  "three_replicate_summary": {
+    "canonical_case_runs": 1500,
+    "resolved_case_runs": 1188,
+    "pooled_descriptive_resolved_rate": 0.792,
+    "canonical_tokens": {
+      "prompt": 731571292,
+      "cached_input": 714904448,
+      "uncached_input": 16666844,
+      "completion": 11868768,
+      "total": 743440060
+    },
+    "canonical_cost": {
+      "cached_input": 1429.808896,
+      "uncached_input": 133.334752,
+      "output": 332.325504,
+      "total": 1895.469152
+    },
+    "tokens_per_pooled_resolved_case_run": 625791.2962962963,
+    "cost_per_pooled_resolved_case_run": 1.5955127542087542,
+    "run_level": {
+      "resolved": {
+        "mean": 396,
+        "median": 395,
+        "min": 395,
+        "max": 398,
+        "range": 3
+      },
+      "resolved_rate": {
+        "mean": 0.792,
+        "median": 0.79,
+        "min": 0.79,
+        "max": 0.796,
+        "range": 0.006
+      },
+      "total_tokens": {
+        "mean": 247813353.33333334,
+        "median": 247384335,
+        "min": 232918550,
+        "max": 263137175,
+        "range": 30218625
+      },
+      "canonical_cost": {
+        "mean": 631.8230506666667,
+        "median": 632.569148,
+        "min": 595.100588,
+        "max": 667.799416,
+        "range": 72.698828
+      },
+      "cost_per_resolved": {
+        "mean": 1.5955283061976548,
+        "median": 1.589369718592965,
+        "min": 1.5065837670886075,
+        "max": 1.6906314329113923,
+        "range": 0.18404766582278476
+      }
+    },
+    "per_case_success_counts": {
+      "resolved_zero_of_three": 71,
+      "resolved_one_of_three": 26,
+      "resolved_two_of_three": 47,
+      "resolved_three_of_three": 356,
+      "stable_unresolved": 71,
+      "variable": 73,
+      "stable_resolved": 356
+    },
+    "pairwise_stability": {
+      "r1_r2": {
+        "both_resolved": 370,
+        "r1_only_resolved": 25,
+        "r2_only_resolved": 25,
+        "neither_resolved": 80,
+        "binary_agreement": 0.9,
+        "resolved_set_jaccard": 0.8809523809523809
+      },
+      "r1_r3": {
+        "both_resolved": 375,
+        "r1_only_resolved": 20,
+        "r3_only_resolved": 23,
+        "neither_resolved": 82,
+        "binary_agreement": 0.914,
+        "resolved_set_jaccard": 0.8971291866028708
+      },
+      "r2_r3": {
+        "both_resolved": 370,
+        "r2_only_resolved": 25,
+        "r3_only_resolved": 28,
+        "neither_resolved": 77,
+        "binary_agreement": 0.894,
+        "resolved_set_jaccard": 0.8747044917257684
+      },
+      "agreement_summary": {
+        "mean": 0.9026666666666667,
+        "median": 0.9,
+        "min": 0.894,
+        "max": 0.914,
+        "range": 0.02
+      },
+      "jaccard_summary": {
+        "mean": 0.88426201976034,
+        "median": 0.8809523809523809,
+        "min": 0.8747044917257684,
+        "max": 0.8971291866028708,
+        "range": 0.0224246948771024
+      }
+    },
+    "three_way_resolved_intersection": 356,
+    "three_way_resolved_union": 429,
+    "union_interpretation": "retry-oracle diagnostic only; not a single-run quality estimate"
+  },
+  "prompt_growth_by_case_trajectory": {
+    "metric": "model-reported prompt tokens at the first and last LLM call of each 500-case canonical trajectory",
+    "runs": {
+      "r1": {
+        "calls_per_case": {
+          "mean": 26.672,
+          "median": 20,
+          "p95_nearest_rank": 69,
+          "max": 159
+        },
+        "first_call_prompt_tokens": {
+          "mean": 1923.142,
+          "median": 1769.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 17876.79,
+          "median": 10629
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 15953.648,
+          "median": 8748.5
+        }
+      },
+      "r2": {
+        "calls_per_case": {
+          "mean": 26.41,
+          "median": 20,
+          "p95_nearest_rank": 64,
+          "max": 170
+        },
+        "first_call_prompt_tokens": {
+          "mean": 1923.142,
+          "median": 1769.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 17022.924,
+          "median": 10452.5
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 15099.782,
+          "median": 8687.5
+        }
+      },
+      "r3": {
+        "calls_per_case": {
+          "mean": 26.136,
+          "median": 20,
+          "p95_nearest_rank": 66,
+          "max": 186
+        },
+        "first_call_prompt_tokens": {
+          "mean": 1923.142,
+          "median": 1769.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 16644.596,
+          "median": 10812
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 14721.454,
+          "median": 8760.5
+        }
+      }
+    },
+    "interpretation": "R2 and R3 retained nearly the same call count and identical first-call prompt average as R1, but had smaller mean final prompts and first-to-last growth. Their lower canonical costs therefore came from smaller realized token trajectories, not a material change in the fixed prompt or tool contract."
+  },
+  "historical_native_comparisons": {
+    "source": "results/experiments/workspace-rag/v3-bge-m3-full500-r1.json",
+    "comparison_rule": "Compare every RAG replicate with E1 and E2 separately; do not pool or average Native controls.",
+    "native_runs": {
+      "e1": {
+        "resolved": 383,
+        "resolved_rate": 0.766,
+        "total_tokens": 209803789,
+        "estimated_cost": 541.309256,
+        "cost_per_resolved": 1.413340093994778
+      },
+      "e2": {
+        "resolved": 399,
+        "resolved_rate": 0.798,
+        "total_tokens": 258800596,
+        "estimated_cost": 646.375208,
+        "cost_per_resolved": 1.6199879899749374
+      }
+    },
+    "r1": {
+      "e1": {
+        "rag_minus_native": {
+          "resolved_cases": 12,
+          "resolved_rate_percentage_points": 2.4,
+          "total_tokens": 53333386,
+          "estimated_cost": 126.49016
+        },
+        "paired_outcomes": {
+          "both_resolved": 363,
+          "native_only_resolved": 20,
+          "rag_only_resolved": 32,
+          "neither_resolved": 85,
+          "exact_mcnemar_two_sided_p": 0.12634707581392135,
+          "paired_difference_95_percent_interval": {
+            "method": "paired Wald interval over the 500 per-instance RAG-minus-native binary differences",
+            "lower_percentage_points": -0.42173655083614264,
+            "upper_percentage_points": 5.221736550836143
+          }
+        },
+        "paired_cell_cost": {
+          "both_resolved": {
+            "cases": 363,
+            "native": 331.406564,
+            "rag": 442.533536,
+            "delta": 111.126972
+          },
+          "native_only_resolved": {
+            "cases": 20,
+            "native": 52.522956,
+            "rag": 58.301432,
+            "delta": 5.778476
+          },
+          "rag_only_resolved": {
+            "cases": 32,
+            "native": 51.602492,
+            "rag": 50.046428,
+            "delta": -1.556064
+          },
+          "neither_resolved": {
+            "cases": 85,
+            "native": 105.777244,
+            "rag": 116.91802,
+            "delta": 11.140776
+          }
+        },
+        "classification": "quality-cost tradeoff"
+      },
+      "e2": {
+        "rag_minus_native": {
+          "resolved_cases": -4,
+          "resolved_rate_percentage_points": -0.8,
+          "total_tokens": 4336579,
+          "estimated_cost": 21.424208
+        },
+        "paired_outcomes": {
+          "both_resolved": 366,
+          "native_only_resolved": 33,
+          "rag_only_resolved": 29,
+          "neither_resolved": 72,
+          "exact_mcnemar_two_sided_p": 0.7035366713552734,
+          "paired_difference_95_percent_interval": {
+            "method": "paired Wald interval over the 500 per-instance RAG-minus-native binary differences",
+            "lower_percentage_points": -3.8889048898983076,
+            "upper_percentage_points": 2.2889048898983075
+          }
+        },
+        "paired_cell_cost": {
+          "both_resolved": {
+            "cases": 366,
+            "native": 321.74256,
+            "rag": 425.039092,
+            "delta": 103.296532
+          },
+          "native_only_resolved": {
+            "cases": 33,
+            "native": 82.937776,
+            "rag": 73.1988,
+            "delta": -9.738976
+          },
+          "rag_only_resolved": {
+            "cases": 29,
+            "native": 132.51182,
+            "rag": 67.540872,
+            "delta": -64.970948
+          },
+          "neither_resolved": {
+            "cases": 72,
+            "native": 109.183052,
+            "rag": 102.020652,
+            "delta": -7.1624
+          }
+        },
+        "classification": "historically Pareto dominated by E2"
+      }
+    },
+    "r2": {
+      "e1": {
+        "rag_minus_native": {
+          "resolved_cases": 12,
+          "resolved_rate_percentage_points": 2.4,
+          "total_tokens": 23114761,
+          "estimated_cost": 53.791332
+        },
+        "paired_outcomes": {
+          "both_resolved": 362,
+          "native_only_resolved": 21,
+          "rag_only_resolved": 33,
+          "neither_resolved": 84,
+          "exact_mcnemar_two_sided_p": 0.13367423536410528,
+          "paired_difference_95_percent_interval": {
+            "method": "paired Wald interval over the 500 per-instance RAG-minus-native binary differences",
+            "lower_percentage_points": -0.4757852927679076,
+            "upper_percentage_points": 5.275785292767908
+          }
+        },
+        "paired_cell_cost": {
+          "both_resolved": {
+            "cases": 362,
+            "native": 324.761716,
+            "rag": 371.456152,
+            "delta": 46.694436
+          },
+          "native_only_resolved": {
+            "cases": 21,
+            "native": 59.167804,
+            "rag": 51.804876,
+            "delta": -7.362928
+          },
+          "rag_only_resolved": {
+            "cases": 33,
+            "native": 65.490052,
+            "rag": 67.093136,
+            "delta": 1.603084
+          },
+          "neither_resolved": {
+            "cases": 84,
+            "native": 91.889684,
+            "rag": 104.746424,
+            "delta": 12.85674
+          }
+        },
+        "classification": "quality-cost tradeoff"
+      },
+      "e2": {
+        "rag_minus_native": {
+          "resolved_cases": -4,
+          "resolved_rate_percentage_points": -0.8,
+          "total_tokens": -25882046,
+          "estimated_cost": -51.27462
+        },
+        "paired_outcomes": {
+          "both_resolved": 368,
+          "native_only_resolved": 31,
+          "rag_only_resolved": 27,
+          "neither_resolved": 74,
+          "exact_mcnemar_two_sided_p": 0.6940040940761316,
+          "paired_difference_95_percent_interval": {
+            "method": "paired Wald interval over the 500 per-instance RAG-minus-native binary differences",
+            "lower_percentage_points": -3.7875484336302523,
+            "upper_percentage_points": 2.187548433630252
+          }
+        },
+        "paired_cell_cost": {
+          "both_resolved": {
+            "cases": 368,
+            "native": 338.921668,
+            "rag": 383.41944,
+            "delta": 44.497772
+          },
+          "native_only_resolved": {
+            "cases": 31,
+            "native": 65.758668,
+            "rag": 42.004044,
+            "delta": -23.754624
+          },
+          "rag_only_resolved": {
+            "cases": 27,
+            "native": 87.298916,
+            "rag": 55.129848,
+            "delta": -32.169068
+          },
+          "neither_resolved": {
+            "cases": 74,
+            "native": 154.395956,
+            "rag": 114.547256,
+            "delta": -39.8487
+          }
+        },
+        "classification": "quality-cost tradeoff"
+      }
+    },
+    "r3": {
+      "e1": {
+        "rag_minus_native": {
+          "resolved_cases": 15,
+          "resolved_rate_percentage_points": 3,
+          "total_tokens": 37580546,
+          "estimated_cost": 91.259892
+        },
+        "paired_outcomes": {
+          "both_resolved": 362,
+          "native_only_resolved": 21,
+          "rag_only_resolved": 36,
+          "neither_resolved": 81,
+          "exact_mcnemar_two_sided_p": 0.0627366803558285,
+          "paired_difference_95_percent_interval": {
+            "method": "paired Wald interval over the 500 per-instance RAG-minus-native binary differences",
+            "lower_percentage_points": 0.04921816684904552,
+            "upper_percentage_points": 5.9507818331509545
+          }
+        },
+        "paired_cell_cost": {
+          "both_resolved": {
+            "cases": 362,
+            "native": 344.170708,
+            "rag": 422.367936,
+            "delta": 78.197228
+          },
+          "native_only_resolved": {
+            "cases": 21,
+            "native": 39.758812,
+            "rag": 39.8536,
+            "delta": 0.094788
+          },
+          "rag_only_resolved": {
+            "cases": 36,
+            "native": 60.755204,
+            "rag": 68.7344,
+            "delta": 7.979196
+          },
+          "neither_resolved": {
+            "cases": 81,
+            "native": 96.624532,
+            "rag": 101.613212,
+            "delta": 4.98868
+          }
+        },
+        "classification": "quality-cost tradeoff"
+      },
+      "e2": {
+        "rag_minus_native": {
+          "resolved_cases": -1,
+          "resolved_rate_percentage_points": -0.2,
+          "total_tokens": -11416261,
+          "estimated_cost": -13.80606
+        },
+        "paired_outcomes": {
+          "both_resolved": 371,
+          "native_only_resolved": 28,
+          "rag_only_resolved": 27,
+          "neither_resolved": 74,
+          "exact_mcnemar_two_sided_p": 1,
+          "paired_difference_95_percent_interval": {
+            "method": "paired Wald interval over the 500 per-instance RAG-minus-native binary differences",
+            "lower_percentage_points": -3.1100084140668525,
+            "upper_percentage_points": 2.710008414066853
+          }
+        },
+        "paired_cell_cost": {
+          "both_resolved": {
+            "cases": 371,
+            "native": 361.621892,
+            "rag": 379.255644,
+            "delta": 17.633752
+          },
+          "native_only_resolved": {
+            "cases": 28,
+            "native": 43.058444,
+            "rag": 28.460192,
+            "delta": -14.598252
+          },
+          "rag_only_resolved": {
+            "cases": 27,
+            "native": 158.384648,
+            "rag": 111.846692,
+            "delta": -46.537956
+          },
+          "neither_resolved": {
+            "cases": 74,
+            "native": 83.310224,
+            "rag": 113.00662,
+            "delta": 29.696396
+          }
+        },
+        "classification": "quality-cost tradeoff"
+      }
+    },
+    "summary": {
+      "e1_quality_cost_tradeoff_replicates": 3,
+      "e2_historically_dominates_replicates": 1,
+      "e2_quality_cost_tradeoff_replicates": 2,
+      "native_comparisons_are_historical": true,
+      "run_wise_rag_minus_native_delta_distribution": {
+        "e1": {
+          "resolved_cases": {
+            "mean": 13,
+            "median": 12,
+            "min": 12,
+            "max": 15,
+            "range": 3
+          },
+          "resolved_rate_percentage_points": {
+            "mean": 2.6,
+            "median": 2.4,
+            "min": 2.4,
+            "max": 3,
+            "range": 0.6
+          },
+          "total_tokens": {
+            "mean": 38009564.333333336,
+            "median": 37580546,
+            "min": 23114761,
+            "max": 53333386,
+            "range": 30218625
+          },
+          "estimated_cost": {
+            "mean": 90.51379466666667,
+            "median": 91.259892,
+            "min": 53.791332,
+            "max": 126.49016,
+            "range": 72.698828
+          }
+        },
+        "e2": {
+          "resolved_cases": {
+            "mean": -3,
+            "median": -4,
+            "min": -4,
+            "max": -1,
+            "range": 3
+          },
+          "resolved_rate_percentage_points": {
+            "mean": -0.6,
+            "median": -0.8,
+            "min": -0.8,
+            "max": -0.2,
+            "range": 0.6
+          },
+          "total_tokens": {
+            "mean": -10987242.666666666,
+            "median": -11416261,
+            "min": -25882046,
+            "max": 4336579,
+            "range": 30218625
+          },
+          "estimated_cost": {
+            "mean": -14.552157333333332,
+            "median": -13.80606,
+            "min": -51.27462,
+            "max": 21.424208,
+            "range": 72.698828
+          }
+        }
+      }
+    }
+  },
+  "tool_profile": {
+    "metric": "executed aggregate tool calls plus model-emitted Bash and code_search calls; Bash command-family counts are standalone-token multi-label counts",
+    "runs": {
+      "r1": {
+        "executed_tool_calls": 14149,
+        "model_emitted_tool_calls": 14149,
+        "bash_calls": 13453,
+        "code_search_calls": 696,
+        "grep": 3238,
+        "find": 325,
+        "cat": 2482,
+        "sed": 3486,
+        "rg": 0
+      },
+      "r2": {
+        "executed_tool_calls": 13915,
+        "model_emitted_tool_calls": 13916,
+        "bash_calls": 13182,
+        "code_search_calls": 734,
+        "grep": 2941,
+        "find": 295,
+        "cat": 2349,
+        "sed": 3449,
+        "rg": 0
+      },
+      "r3": {
+        "executed_tool_calls": 13688,
+        "model_emitted_tool_calls": 13689,
+        "bash_calls": 13002,
+        "code_search_calls": 687,
+        "grep": 2937,
+        "find": 289,
+        "cat": 2557,
+        "sed": 3319,
+        "rg": 0
+      }
+    },
+    "interpretation": "R2 and R3 each contain one model-emitted Bash call without a corresponding executed-tool increment, so emitted Bash plus code_search calls must not be equated with the executed aggregate. Across all runs, code_search co-occurred with and did not replace Bash discovery."
+  },
+  "retrieval_metrics": {
+    "runs": {
+      "r1": {
+        "preload_injected_cases": 0,
+        "code_search_calls": 696,
+        "code_search_responses": 696,
+        "case_runs_with_code_search": 387,
+        "raw_retrieved_documents": 3777,
+        "code_search_raw_result_bytes": 3177296,
+        "code_search_model_observation_bytes": 1692977,
+        "model_observation_vs_raw_byte_ratio": 0.5328357823759574
+      },
+      "r2": {
+        "preload_injected_cases": 0,
+        "code_search_calls": 734,
+        "code_search_responses": 734,
+        "case_runs_with_code_search": 393,
+        "raw_retrieved_documents": 3930,
+        "code_search_raw_result_bytes": 3313717,
+        "code_search_model_observation_bytes": 1770411,
+        "model_observation_vs_raw_byte_ratio": 0.5342674102827731
+      },
+      "r3": {
+        "preload_injected_cases": 0,
+        "code_search_calls": 687,
+        "code_search_responses": 687,
+        "case_runs_with_code_search": 385,
+        "raw_retrieved_documents": 3743,
+        "code_search_raw_result_bytes": 3199575,
+        "code_search_model_observation_bytes": 1725819,
+        "model_observation_vs_raw_byte_ratio": 0.5393900752443684
+      }
+    },
+    "format_interpretation": "The XML-like observation was 46.06% to 46.72% smaller than raw structured retrieval telemetry by bytes across the three runs; bytes are not a direct token or causal quality estimate."
+  },
+  "workspace_index": {
+    "common_corpus_profile": {
+      "successful_cases_per_run": 500,
+      "representation": "ast-structured",
+      "retrieval_mode": "hybrid",
+      "documents_per_run": 13704528,
+      "eligible_files_per_run": 699590,
+      "indexed_files_per_run": 699544,
+      "missing_files_per_run": 46,
+      "file_coverage_min": 0.9809417040358744,
+      "file_coverage_mean": 0.9999096148323009,
+      "cases_below_full_coverage_per_run": 8,
+      "eligible_indexed_count_mismatch_cases_per_run": 8,
+      "eligible_indexed_hash_mismatch_cases_per_run": 8,
+      "all_fallback_cases_per_run": 0,
+      "fallback_documents_per_run": 18380,
+      "fallback_document_rate": 0.0013411625705022456,
+      "fallback_reasons_per_run": {
+        "no_nodes": 18096,
+        "parse_error": 284
+      },
+      "node_types_per_run": {
+        "Class": 2455870,
+        "Function": 2575672,
+        "Interface": 478,
+        "Method": 7324748,
+        "Variable": 1329380,
+        "file": 18380
+      },
+      "content_chars_per_run": 6747758849,
+      "embedding_text_chars_per_run": 11749853448,
+      "duplicate_documents_per_run": 773592,
+      "duplicate_document_rate_weighted": 0.05644791268987885
+    },
+    "duration_ms": {
+      "r1": {
+        "aggregate": 34734201,
+        "mean": 69468.402,
+        "median": 89487.5,
+        "p95_nearest_rank": 102595,
+        "min": 1736,
+        "max": 141784
+      },
+      "r2": {
+        "aggregate": 35056170,
+        "mean": 70112.34,
+        "median": 89890.5,
+        "p95_nearest_rank": 102950,
+        "min": 1770,
+        "max": 152030
+      },
+      "r3": {
+        "aggregate": 34905139,
+        "mean": 69810.278,
+        "median": 89235,
+        "p95_nearest_rank": 104226,
+        "min": 1809,
+        "max": 166924
+      }
+    },
+    "coverage_interpretation": "The identical 46 missing-file counts across eight cases are the previously diagnosed frozen scanner/reader accounting differences; no runtime index-loss or all-fallback case was observed."
+  },
+  "embedding_and_cache": {
+    "r1": {
+      "embedding": {
+        "requests": 637,
+        "batch_requests": 0,
+        "inputs": 637,
+        "prompt_tokens": 637,
+        "total_tokens": 637,
+        "errors": 0,
+        "duration_ms": 29539
+      },
+      "cache": {
+        "requests": 215080,
+        "batch_requests": 214384,
+        "inputs": 13705224,
+        "hits": 13704587,
+        "misses": 637,
+        "writes": 637,
+        "hit_rate": 0.9999535213725803,
+        "bytes_read": 55547146240,
+        "bytes_written": 2609152,
+        "read_duration_ms": 2010454,
+        "write_duration_ms": 1457,
+        "errors": 0,
+        "corruptions": 0
+      }
+    },
+    "r2": {
+      "embedding": {
+        "requests": 418,
+        "batch_requests": 0,
+        "inputs": 418,
+        "prompt_tokens": 418,
+        "total_tokens": 418,
+        "errors": 0,
+        "duration_ms": 105973
+      },
+      "cache": {
+        "requests": 215118,
+        "batch_requests": 214384,
+        "inputs": 13705262,
+        "hits": 13704844,
+        "misses": 418,
+        "writes": 418,
+        "hit_rate": 0.9999695007654724,
+        "bytes_read": 55548198912,
+        "bytes_written": 1712128,
+        "read_duration_ms": 2493821,
+        "write_duration_ms": 850,
+        "errors": 0,
+        "corruptions": 0
+      }
+    },
+    "r3": {
+      "embedding": {
+        "requests": 392,
+        "batch_requests": 0,
+        "inputs": 392,
+        "prompt_tokens": 392,
+        "total_tokens": 392,
+        "errors": 0,
+        "duration_ms": 19986
+      },
+      "cache": {
+        "requests": 215071,
+        "batch_requests": 214384,
+        "inputs": 13705215,
+        "hits": 13704823,
+        "misses": 392,
+        "writes": 392,
+        "hit_rate": 0.999971397748959,
+        "bytes_read": 55548112896,
+        "bytes_written": 1605632,
+        "read_duration_ms": 2295524,
+        "write_duration_ms": 447,
+        "errors": 0,
+        "corruptions": 0
+      }
+    },
+    "interpretation": "The persistent cache was already warm and became slightly warmer. Embedding and cache timing are operational observations, not treatment-causal estimates."
+  },
+  "transport": {
+    "r1": {
+      "terminal_non_agent_failures": 0,
+      "quality_blind_recoveries": 0,
+      "canonical_transport_errors": 0,
+      "model_retry_log_lines": 0,
+      "embedding_retry_attempt_1_of_3": 0,
+      "embedding_retry_attempt_2_of_3": 0,
+      "embedding_retry_attempt_3_of_3": 0,
+      "http_502_log_lines": 0,
+      "final_embedding_errors": 0,
+      "embedding_errors": 0,
+      "cache_errors": 0,
+      "fatal_log_lines": 0,
+      "panic_log_lines": 0,
+      "oom_log_lines": 0
+    },
+    "r2": {
+      "terminal_non_agent_failures": 0,
+      "quality_blind_recoveries": 0,
+      "canonical_transport_errors": 0,
+      "model_retry_log_lines": 0,
+      "embedding_retry_attempt_1_of_3": 0,
+      "embedding_retry_attempt_2_of_3": 0,
+      "embedding_retry_attempt_3_of_3": 0,
+      "http_502_log_lines": 0,
+      "final_embedding_errors": 0,
+      "embedding_errors": 0,
+      "cache_errors": 0,
+      "fatal_log_lines": 0,
+      "panic_log_lines": 0,
+      "oom_log_lines": 0
+    },
+    "r3": {
+      "terminal_non_agent_failures": 1,
+      "quality_blind_recoveries": 1,
+      "successful_recoveries": 1,
+      "canonical_transport_errors": 0,
+      "model_retry_log_lines": 0,
+      "embedding_retry_attempt_1_of_3": 0,
+      "embedding_retry_attempt_2_of_3": 0,
+      "embedding_retry_attempt_3_of_3": 0,
+      "http_502_log_lines": 0,
+      "final_embedding_errors": 0,
+      "embedding_errors": 0,
+      "cache_errors": 0,
+      "fatal_log_lines": 0,
+      "panic_log_lines": 0,
+      "oom_log_lines": 0
+    }
+  },
+  "operational_accounting": {
+    "canonical": {
+      "tokens": 743440060,
+      "cost": 1895.469152
+    },
+    "known_actual_attempt_lower_bound": {
+      "tokens": 771593067,
+      "cost": 1963.90818
+    },
+    "difference_from_canonical": {
+      "tokens": 28153007,
+      "cost": 68.439028,
+      "cause": "one superseded R3 non-Agent transport-failed attempt"
+    },
+    "generation_wall_duration_ms": 55957428,
+    "official_harness_duration_ms": 13423015,
+    "resource_monitoring": {
+      "r1_formal_time_series_available": false,
+      "r2_formal_time_series_available": true,
+      "r3_formal_time_series_available": true,
+      "exact_host_resource_values_publicly_omitted": true,
+      "oom_or_storage_pause_across_runs": false,
+      "interpretation": "The R1 monitoring gap limits cross-run host-resource reconstruction but does not affect complete official-harness outcomes or canonical model usage."
+    }
+  },
+  "validation": {
+    "all_three_case_sets_match": true,
+    "case_count_per_replicate": 500,
+    "canonical_case_runs": 1500,
+    "all_canonical_generation_outcomes_submitted": true,
+    "all_public_and_private_fingerprints_match": true,
+    "official_harness_configuration_matches_plan_all_runs": true,
+    "official_harness_exit_zero_all_runs": true,
+    "official_harness_error_zero_all_runs": true,
+    "binary_quality_outcome_available_for_all_case_runs": true,
+    "usage_matches_import_all_runs": true,
+    "canonical_cost_recomputed_from_rate_card": true,
+    "r3_selection_reconciles_subtract_add": true,
+    "r3_recovery_membership_frozen_quality_blind": true,
+    "r3_primary_artifacts_unchanged": true,
+    "success_count_bins_sum_to_500": true,
+    "success_count_weighted_sum_matches_1188": true,
+    "pairwise_cells_sum_to_500": true,
+    "pairwise_agreement_and_jaccard_recomputed": true,
+    "historical_paired_cells_sum_to_500": true,
+    "historical_paired_cell_costs_sum_to_run_totals": true,
+    "all_terminal_call_limit_counts_verified": true,
+    "workspace_index_aggregate_profiles_match_all_runs": true,
+    "embedding_and_cache_profiles_reconciled": true,
+    "transport_log_counters_reconciled": true,
+    "embedding_errors_zero": true,
+    "cache_errors_zero": true,
+    "cache_corruptions_zero": true,
+    "json_parse": true,
+    "metric_consistency_assertions": true,
+    "case_list_sha256_verified": true
+  },
+  "decision": {
+    "absolute_full_panel_replicates_complete": 3,
+    "resolved_counts": [
+      395,
+      395,
+      398
+    ],
+    "canonical_costs": [
+      667.799416,
+      595.100588,
+      632.569148
+    ],
+    "frontier_target": "resolved >= 399 and canonical estimated model cost < 541.309256 in an individual run",
+    "frontier_target_met_replicates": 0,
+    "repeatable_descriptive_frontier_success": false,
+    "e2_historically_dominates_replicates": 1,
+    "repeatable_historical_e2_domination": false,
+    "all_replicates_vs_e1": "quality-cost tradeoff",
+    "recommend_default_promotion": false,
+    "recommend_automatic_additional_run": false,
+    "revise_v5r_no_expansion": false,
+    "reasons": [
+      "The three observed resolved counts were tightly grouped at 395, 395, and 398, but no run reached the 399-case quality threshold while also beating the 541.309256 lower Native cost.",
+      "R2 and R3 reduced canonical cost relative to R1, yet all three remained more expensive than E1 while resolving more cases.",
+      "E2 historically dominated R1; R2 and R3 were cheaper than E2 but resolved four and one fewer cases respectively, so those comparisons are quality-cost tradeoffs.",
+      "The three-run pooled 79.2% and 631.823051 mean cost characterize this RAG bundle, not a causal improvement over Native.",
+      "The 0.894 to 0.914 pairwise agreement and 0.875 to 0.897 resolved-set Jaccard show meaningful per-case stochastic variation despite the narrow aggregate resolved range."
+    ],
+    "conclusion": "Record the stable approximately 79% quality level and materially variable 595.100588 to 667.799416 canonical cost range. The repeated bundle did not achieve the pre-registered joint quality-cost frontier and should not be promoted by default."
+  },
+  "limitations": [
+    "Three sequential RAG executions are a small run-level sample and share model-service, host, and persistent-cache history.",
+    "Native E1 and E2 are historical realizations rather than concurrent same-revision randomized controls.",
+    "The treatment is a bundle and cannot isolate AST, prompt, tool order, XML result formatting, or preload removal.",
+    "Canonical model cost excludes embedding, indexing, host, storage, network, Docker, and labor costs.",
+    "R3 required one quality-blind non-Agent recovery; canonical accounting includes the selected recovery and excludes the superseded attempt, which remains disclosed in operational accounting.",
+    "The R1 formal resource-monitoring time series is missing, so cross-run host-resource comparisons are incomplete.",
+    "The three-way resolved union is an oracle diagnostic and cannot be presented as single-run performance."
+  ]
+}

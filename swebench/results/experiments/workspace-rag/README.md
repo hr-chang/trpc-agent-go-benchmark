@@ -1615,3 +1615,140 @@ automatically promotes the bundle or starts another experiment.
 The frozen replicate IDs, serial execution rule, recovery contract, analysis,
 decision thresholds, and publication boundary are in
 [`v10-bge-m3-ast-rag-agent-adapt-r2-r3-plan.json`](./v10-bge-m3-ast-rag-agent-adapt-r2-r3-plan.json).
+
+## RAG-adapted AST Agent repeated full-500 result
+
+R2 and R3 completed after the V10 pre-registration under the same frozen
+source, framework, binary, panel, six-worker generation, model, RAG, prompt,
+tool-order, XML observation, timeout, rate-card, and official-harness settings
+as V9 R1. Both prospective prediction sets were complete before either
+prospective quality result was inspected.
+
+All three canonical prediction sets contain 500 `Submitted` outcomes, no
+empty patch, and no canonical Agent or infrastructure error. The calibrated
+official harness completed all 500 cases without verifier error in every run.
+
+### Per-run quality and canonical model cost
+
+| Run | Resolved | Total tokens | Canonical cost | Tokens / resolved | Cost / resolved |
+|---|---:|---:|---:|---:|---:|
+| R1 | 395/500 (79.0%) | 263,137,175 | 667.799416 | 666,170.06 | 1.690631 |
+| R2 | 395/500 (79.0%) | 232,918,550 | 595.100588 | 589,667.22 | 1.506584 |
+| R3 | 398/500 (79.6%) | 247,384,335 | 632.569148 | 621,568.68 | 1.589370 |
+| **Three-run sum / pooled case-runs** | **1,188/1,500 (79.2%)** | **743,440,060** | **1,895.469152** | **625,791.30** | **1.595513** |
+
+The pooled row summarizes repeated case-runs, not 1,500 independent cases.
+Mean run-level cost was 631.823051, with a 595.100588 to 667.799416 range;
+resolved counts occupied the much narrower 395 to 398 range.
+
+R3's original generation contained one retryable non-Agent transport timeout.
+Recovery membership was frozen from infrastructure evidence without consulting
+quality, the original artifact was retained, and the canonical panel selected
+the successful recovery for that case. Canonical R3 usage is 247,384,335
+tokens and 632.569148 cost. Including the superseded failed attempt, its known
+actual-attempt lower bound is 275,537,342 tokens and 701.008176 cost. Across
+all three runs, the corresponding operational lower bound is 771,593,067
+tokens and 1,963.908180 cost, versus the canonical 743,440,060 tokens and
+1,895.469152 cost used for quality-cost comparison.
+
+### Three-run outcome stability
+
+| Number of successful runs per case | Cases |
+|---|---:|
+| 0/3 | 71 |
+| 1/3 | 26 |
+| 2/3 | 47 |
+| 3/3 | 356 |
+
+Thus 356 cases were stably resolved, 71 were stably unresolved, and 73 varied
+across runs. The at-least-once resolved union is 429 cases, but this is only a
+retry-oracle diagnostic and must not be reported as single-run quality.
+
+| Pair | Both resolved | First only | Second only | Neither | Agreement | Resolved-set Jaccard |
+|---|---:|---:|---:|---:|---:|---:|
+| R1 / R2 | 370 | 25 | 25 | 80 | 90.0% | 88.10% |
+| R1 / R3 | 375 | 20 | 23 | 82 | 91.4% | 89.71% |
+| R2 / R3 | 370 | 25 | 28 | 77 | 89.4% | 87.47% |
+
+Aggregate resolved quality was stable, but pairwise agreement of 89.4% to
+91.4% and Jaccard of 87.47% to 89.71% still show material per-case stochastic
+variation.
+
+### Separate historical Native context
+
+| RAG run minus historical run | Resolved difference | Canonical cost difference | Classification |
+|---|---:|---:|---|
+| R1 minus E1 | +12 / +2.4pp | +126.490160 | Quality-cost tradeoff |
+| R2 minus E1 | +12 / +2.4pp | +53.791332 | Quality-cost tradeoff |
+| R3 minus E1 | +15 / +3.0pp | +91.259892 | Quality-cost tradeoff |
+| R1 minus E2 | -4 / -0.8pp | +21.424208 | Historically dominated by E2 |
+| R2 minus E2 | -4 / -0.8pp | -51.274620 | Quality-cost tradeoff |
+| R3 minus E2 | -1 / -0.2pp | -13.806060 | Quality-cost tradeoff |
+
+Across the three run-wise comparisons, the RAG-minus-Native delta summaries
+are:
+
+| Historical run | Metric | Mean | Median | Min | Max |
+|---|---|---:|---:|---:|---:|
+| E1 | Resolved cases | +13.00 | +12 | +12 | +15 |
+| E1 | Resolved-rate percentage points | +2.60pp | +2.40pp | +2.40pp | +3.00pp |
+| E1 | Total tokens | +38,009,564.33 | +37,580,546 | +23,114,761 | +53,333,386 |
+| E1 | Canonical cost | +90.513795 | +91.259892 | +53.791332 | +126.490160 |
+| E2 | Resolved cases | -3.00 | -4 | -4 | -1 |
+| E2 | Resolved-rate percentage points | -0.60pp | -0.80pp | -0.80pp | -0.20pp |
+| E2 | Total tokens | -10,987,242.67 | -11,416,261 | -25,882,046 | +4,336,579 |
+| E2 | Canonical cost | -14.552157 | -13.806060 | -51.274620 | +21.424208 |
+
+E1 and E2 remain separate historical realizations, not concurrent randomized
+controls. All three RAG runs improved on E1 quality only at higher cost. E2
+had both higher quality and lower cost than R1, while R2 and R3 were cheaper
+than E2 but resolved four and one fewer cases respectively. Full per-run 2x2
+outcome cells and canonical cell-cost reconciliations are in the result JSON.
+
+### Prompt, tool, and retrieval profile
+
+| Run | LLM calls | Executed tools | Model-emitted Bash | `code_search` calls / cases | Mean final prompt | Mean prompt growth |
+|---|---:|---:|---:|---:|---:|---:|
+| R1 | 13,336 | 14,149 | 13,453 | 696 / 387 | 17,877 | 15,954 |
+| R2 | 13,205 | 13,915 | 13,182 | 734 / 393 | 17,023 | 15,100 |
+| R3 | 13,068 | 13,688 | 13,002 | 687 / 385 | 16,645 | 14,721 |
+
+R2 and R3 retained similar call counts and the same 1,923-token mean first
+prompt as R1, while carrying smaller mean final prompts and prompt growth.
+This describes where their lower realized cost appeared, without identifying
+an individual bundle component as the cause.
+
+The model-emitted Bash/code-search count is not identical to the runner's
+executed-tool aggregate: R2 and R3 each had one emitted Bash call without a
+matching executed-tool increment. The result therefore reports these as
+separate metrics. Across runs, XML-like search observations used 46.06% to
+46.72% fewer bytes than raw retrieval telemetry, while on-demand search was
+used by 385 to 393 cases. Initial preload remained disabled in all 1,500
+case-runs.
+
+Every run produced the same aggregate per-case AST index profile: 13,704,528
+documents, covering 699,544 of 699,590 eligible files, with no all-fallback
+case. The 46-file difference across eight cases is the previously diagnosed
+frozen scanner/reader accounting difference. Embedding and cache errors and
+cache corruptions were zero in all runs; cache hit rates exceeded 99.995%.
+
+### Decision
+
+No replicate met the pre-registered frontier of at least 399 resolved cases at
+less than 541.309256 canonical cost, so repeatable descriptive frontier
+success is **0/3**. E2 historically dominated only R1, so repeatable E2
+domination is also false; R2 and R3 instead expose a smaller quality-versus-cost
+tradeoff against E2.
+
+Record this bundle as an approximately 79% full-panel profile with tightly
+clustered aggregate quality but materially variable canonical cost. Do not
+promote it by default, automatically start another run, revise the V5-R
+no-expansion decision, or infer component-level causality. R2 and R3 retained
+formal resource monitoring and neither experienced OOM or a storage pause;
+R1's missing formal resource time series still limits cross-run operational
+comparison but not quality or canonical model-cost accounting.
+
+Sanitized per-run metrics, three-run stability, complete Native E1/E2 paired
+cells and cost decompositions, quality-blind recovery accounting, validation,
+and limitations are in
+[`v10-bge-m3-ast-rag-agent-adapt-r2-r3-result.json`](./v10-bge-m3-ast-rag-agent-adapt-r2-r3-result.json).
