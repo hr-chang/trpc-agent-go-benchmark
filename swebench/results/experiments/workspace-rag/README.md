@@ -1752,3 +1752,30 @@ Sanitized per-run metrics, three-run stability, complete Native E1/E2 paired
 cells and cost decompositions, quality-blind recovery accounting, validation,
 and limitations are in
 [`v10-bge-m3-ast-rag-agent-adapt-r2-r3-result.json`](./v10-bge-m3-ast-rag-agent-adapt-r2-r3-result.json).
+
+## V6 highest-RR preload repeat plan
+
+The historical V6 `ast-structured` preload run remains the highest observed
+single full-500 result at 403/500 (80.6%). Two additional repetitions are
+pre-registered to measure whether that old-revision absolute profile repeats.
+They reuse the original V6 binary and freeze GLM-5.2 high, BGE-M3 Hybrid,
+four-result/6,000-character preload, XML observations, the legacy prompt and
+tool protocol, and 15-worker primary generation. Later Agent-adapt prompt,
+validator, tool-order, code-search formatting, and no-preload changes are not
+backported.
+
+R2 and R3 run strictly serially. R3 starts after R2 generation-integrity
+verification without consulting R2 official quality; both generations finish
+before either prospective harness result is inspected. Exact fixed-call-limit
+Agent failures remain canonical unresolved outcomes. Non-Agent failures and
+unfinished cases after an evidenced resource interruption are recovered from
+a quality-blind frozen set without overwriting valid terminal artifacts. The
+pre-registered resource fallback changes only recovery concurrency from 15 to
+six workers.
+
+These repetitions characterize a historically selected high-scoring arm and
+remain subject to regression-to-the-mean selection bias. They are not a
+controlled AST, preload, or RAG comparison, cannot revise V5-R, and cannot
+automatically promote the old bundle. The frozen execution order, recovery
+contract, analysis, decision thresholds, and publication boundary are in
+[`v11-bge-m3-ast-preload-r2-r3-plan.json`](./v11-bge-m3-ast-preload-r2-r3-plan.json).
