@@ -1779,3 +1779,133 @@ controlled AST, preload, or RAG comparison, cannot revise V5-R, and cannot
 automatically promote the old bundle. The frozen execution order, recovery
 contract, analysis, decision thresholds, and publication boundary are in
 [`v11-bge-m3-ast-preload-r2-r3-plan.json`](./v11-bge-m3-ast-preload-r2-r3-plan.json).
+
+## V6 highest-RR preload repeated full-500 result
+
+R2 and R3 completed after the V11 pre-registration under the frozen V6
+source, framework, binary, panel, model, BGE-M3 Hybrid retrieval, AST preload,
+legacy Bash-first prompt/tool protocol, XML observations, timeouts, rate card,
+and official-harness settings. Both prospective prediction sets were complete
+before either prospective quality result was inspected.
+
+All three generations required quality-blind resource recovery. R1 selected
+464 original outcomes plus 36 recovered outcomes. R2 froze 482 valid primary
+outcomes and recovered 18 cases after a host OOM: one primary timeout and 17
+unfinished cases. R3 froze 461 primary outcomes, including one exact 250-call
+Agent failure, and recovered 39 unfinished cases after a host OOM. R2 and R3
+changed only recovery execution concurrency from 15 to six workers; no valid
+terminal artifact was rerun or overwritten.
+
+### Per-run quality and canonical model cost
+
+| Run | Resolved | Total tokens | Canonical cost | Tokens / resolved | Cost / resolved |
+|---|---:|---:|---:|---:|---:|
+| R1 | 403/500 (80.6%) | 253,430,286 | 638.583100 | 628,859.27 | 1.584573 |
+| R2 | 388/500 (77.6%) | 246,823,532 | 622.294600 | 636,143.12 | 1.603852 |
+| R3 | 394/500 (78.8%) | 261,628,927 | 653.587380 | 664,032.81 | 1.658851 |
+| **Three-run sum / pooled case-runs** | **1,185/1,500 (79.0%)** | **761,882,745** | **1,914.465080** | **642,939.03** | **1.615582** |
+
+The pooled row is descriptive repeated-case accounting, not a 1,500-case
+independent estimate. At the run level, resolved count had mean 395, median
+394, and range 388 to 403. Canonical cost had mean 638.155027, median
+638.583100, and range 622.294600 to 653.587380. The two prospective runs did
+not reproduce the selected 403-case reference.
+
+R1 retained two exact call-limit failures as empty unresolved outcomes. R2 had
+no canonical generation failure, but the official harness retained one
+patch-induced CPU-bound test timeout as an error; it was not rerun. R3 retained
+one exact call-limit failure as its single empty unresolved outcome, and its
+official harness completed all 499 non-empty patches without error.
+
+Canonical accounting includes exactly one selected terminal artifact for each
+case. Reconstructable terminal-attempt lower bounds were 256,510,091 tokens /
+646.853288 cost for R1, 248,055,506 / 625.670512 for R2, and at least
+261,628,927 / 653.587380 for R3. The combined terminal-artifact lower bound is
+766,194,524 tokens and 1,926.111180 cost, versus canonical 761,882,745 and
+1,914.465080. Interrupted work without a terminal trace remains unpriced, so
+these are operational lower bounds rather than total realized spend.
+
+### Three-run outcome stability
+
+| Number of successful runs per case | Cases |
+|---|---:|
+| 0/3 | 66 |
+| 1/3 | 33 |
+| 2/3 | 51 |
+| 3/3 | 350 |
+
+Thus 350 cases were stably resolved, 66 were stably unresolved, and 84 varied
+across runs. The at-least-once resolved union is 434 cases, but this is only a
+retry-oracle diagnostic and must not be reported as single-run quality.
+
+| Pair | Both resolved | First only | Second only | Neither | Agreement | Resolved-set Jaccard |
+|---|---:|---:|---:|---:|---:|---:|
+| R1 / R2 | 364 | 39 | 24 | 73 | 87.4% | 85.25% |
+| R1 / R3 | 374 | 29 | 20 | 77 | 90.2% | 88.42% |
+| R2 / R3 | 363 | 25 | 31 | 81 | 88.8% | 86.63% |
+
+Mean pairwise agreement was 88.8%, and mean resolved-set Jaccard was 86.77%.
+This is materially more case-level variability than the 15-case aggregate
+resolved range alone suggests.
+
+### Separate historical Native context
+
+Native E1 remains 383/500, 209,803,789 tokens, and 541.309256 cost. Native E2
+remains 399/500, 258,800,596 tokens, and 646.375208 cost. They are compared
+separately below and are never pooled or averaged.
+
+| V6 run minus historical run | Resolved difference | Rate difference | Token difference | Cost difference | Classification |
+|---|---:|---:|---:|---:|---|
+| R1 minus E1 | +20 | +4.0pp | +43,626,497 | +97.273844 | Historical quality-cost tradeoff |
+| R2 minus E1 | +5 | +1.0pp | +37,019,743 | +80.985344 | Historical quality-cost tradeoff |
+| R3 minus E1 | +11 | +2.2pp | +51,825,138 | +112.278124 | Historical quality-cost tradeoff |
+| R1 minus E2 | +4 | +0.8pp | -5,370,310 | -7.792108 | R1 historically Pareto dominates E2 |
+| R2 minus E2 | -11 | -2.2pp | -11,977,064 | -24.080608 | Historical quality-cost tradeoff |
+| R3 minus E2 | -5 | -1.0pp | +2,828,331 | +7.212172 | R3 historically Pareto dominated by E2 |
+
+Every V6 run improved quality over E1 only at higher model cost. Relative to
+E2, the selected R1 happened to be both better and cheaper, R2 was cheaper but
+lower quality, and R3 was both lower quality and more expensive. These are
+historical paired descriptions, not a contemporaneous controlled effect.
+
+### Prompt, tool, retrieval, and index profile
+
+| Run | LLM calls | Executed tools | Bash calls | `code_search` calls / cases | Mean final prompt | Mean prompt growth |
+|---|---:|---:|---:|---:|---:|---:|
+| R1 | 13,555 | 14,099 | 14,018 | 81 / 80 | unavailable | unavailable |
+| R2 | 13,230 | 13,798 | 13,720 | 78 / 77 | 17,163 | 14,153 |
+| R3 | 13,476 | 14,005 | 13,918 | 87 / 85 | 17,442 | 14,432 |
+
+R2 and R3 had essentially identical mean first-call prompts of about 3,010
+tokens, consistent with the frozen preload contract. R1's imported public
+trace redacts per-call usage, so its aggregate canonical usage and call counts
+remain complete while first-to-last prompt growth is not reconstructed.
+
+Preload injected the same 1,556 documents and 2,513,855 characters in every
+run. All three produced the same 13,704,528-document AST corpus, covering
+699,544 of 699,590 eligible files, with no all-fallback case. The fixed
+46-file difference across eight cases is the previously diagnosed
+scanner/reader accounting difference, not runtime index loss.
+
+R1 required 253,371 embedding inputs and had a 98.14% cache hit rate. The
+persistent cache was much warmer for the prospective repeats: R2 required 41
+embedding inputs and R3 required 53, with cache hit rates above 99.9996%.
+Embedding and cache errors and cache corruptions were zero. This cache state is
+operational context and cannot be attributed as a quality treatment.
+
+### Decision
+
+Only one of three runs reached 400 resolved cases, and only the selected R1
+reached the 403-case reference. Therefore both pre-registered repeatability
+rules fail: the at-least-80% profile is not repeatable, and the reference score
+is not repeatable. No default promotion or automatic additional run follows.
+
+Record the frozen V6 bundle as a three-run 77.6% to 80.6% profile with a 79.0%
+pooled descriptive case-run rate. Do not report best-of-three, treat the 1,500
+case-runs as independent, revise the V5-R decision, or infer that AST or
+preload alone caused the observed profile.
+
+Sanitized per-run metrics, canonical and operational accounting, success bins,
+pairwise stability, separate Native E1/E2 paired cells and cost decomposition,
+prompt/tool/retrieval profiles, validation, and limitations are in
+[`v11-bge-m3-ast-preload-r2-r3-result.json`](./v11-bge-m3-ast-preload-r2-r3-result.json).

@@ -1,0 +1,1094 @@
+{
+  "schema_version": 1,
+  "status": "completed_with_resource_recovery",
+  "evidence_status": "complete",
+  "completed_on": "2026-07-26",
+  "result_id": "v11-bge-m3-ast-preload-r2-r3",
+  "question": "When the historically highest-RR V6 ast-structured preload bundle is repeated twice without changing its model, prompt/runtime binary, retrieval, preload, or primary concurrency, how stable are full-500 official-harness quality and canonical model-side cost?",
+  "inference_scope": {
+    "design": "one historically selected high-scoring reference and two prospectively registered sequential replicates of the same frozen V6 bundle",
+    "purpose": "describe absolute repeatability of the selected V6 profile",
+    "selection_warning": "R1 was selected for repetition because it was the highest observed full-500 RR, so the three-run profile is conditional on that selection and may regress toward the mean.",
+    "controlled_component_effect_available": false,
+    "case_runs_are_independent": false,
+    "best_of_three_quality_estimate_allowed": false
+  },
+  "public_provenance": {
+    "plan": "results/experiments/workspace-rag/v11-bge-m3-ast-preload-r2-r3-plan.json",
+    "reference_result": "results/experiments/workspace-rag/v6-bge-m3-ast-b500-exploratory-result.json",
+    "source_revision": "1532343d90ed0e86d9bab7365166ee060ab2a34d",
+    "framework_revision": "9c4a839314a2f0f0b782196e52a45c733a94f213",
+    "case_list": "data/case-lists/verified-test-500.case_ids.txt",
+    "case_count": 500,
+    "case_list_sha256": "a6b0fd7c8c2969a0eef892e032250adcfa6d32362d395c246930e61b575ac9b9"
+  },
+  "protocol": {
+    "prospective_replicates": [
+      "r2",
+      "r3"
+    ],
+    "strictly_serial": true,
+    "outcome_adaptive_stopping": false,
+    "both_prospective_generations_completed_before_quality_inspection": true,
+    "primary_agent_workers": 15,
+    "resource_recovery_agent_workers": 6,
+    "quality_blind_recovery": true,
+    "valid_terminal_artifacts_rerun": false,
+    "official_harness": {
+      "target": "tag",
+      "workers": 4,
+      "verifier_mode": "calibrated",
+      "cache_level": "instance",
+      "clean": false,
+      "apply_harness_compat": true,
+      "instances_from_predictions": true
+    }
+  },
+  "fixed_parameters": {
+    "model": "GLM-5.2",
+    "reasoning_effort": "high",
+    "embedding_model": "bge-m3",
+    "retrieval_mode": "hybrid",
+    "embedding_dimensions": 1024,
+    "embedding_batch_size": 64,
+    "embedding_concurrency": 1,
+    "embedding_cache_access": "readwrite",
+    "max_results": 4,
+    "max_chars": 6000,
+    "observation_codec": "xml",
+    "code_search": true,
+    "workspace_preload": true,
+    "workspace_representation": "ast-structured",
+    "command_timeout": "1m",
+    "case_timeout": "2h",
+    "prompt_and_tool_protocol": "frozen legacy V6 Bash-first/preload bundle; no later Agent-adapt, no-preload, tool-order, or code-search-schema changes"
+  },
+  "rate_card": {
+    "unit_tokens": 1000000,
+    "cached_input": 2,
+    "uncached_input": 8,
+    "output": 28
+  },
+  "replicates": {
+    "r1": {
+      "run_id": "tag-rag-ast-b500-exploratory-20260721-r1",
+      "role": "historically selected V6 reference replicate",
+      "generation_integrity": {
+        "canonical_case_count": 500,
+        "canonical_status_counts": {
+          "Submitted": 498,
+          "Error": 2
+        },
+        "canonical_empty_patches": 2,
+        "canonical_agent_errors": 2,
+        "terminal_call_limit_cases": 2,
+        "quality_blind_recovery_membership": 36,
+        "canonical_selection_rule": "464 retained original outcomes plus 36 quality-blind recovery outcomes",
+        "fingerprints_match": true,
+        "valid_terminal_artifacts_rerun": false
+      },
+      "official_harness": {
+        "status": "completed",
+        "submitted_instances": 500,
+        "completed_instances": 498,
+        "resolved_instances": 403,
+        "resolved_rate": 0.806,
+        "unresolved_nonempty_instances": 95,
+        "empty_patch_instances": 2,
+        "error_instances": 0,
+        "verifier_exit_code": 0,
+        "duration_ms": 5271841
+      },
+      "model_metrics": {
+        "llm_calls": 13555,
+        "prompt_tokens": 249636343,
+        "cached_input_tokens": 244123008,
+        "uncached_input_tokens": 5513335,
+        "completion_tokens": 3793943,
+        "total_tokens": 253430286,
+        "cost_components": {
+          "cached_input": 488.246016,
+          "uncached_input": 44.10668,
+          "output": 106.230404
+        },
+        "estimated_cost": 638.5831,
+        "tokens_per_resolved": 628859.270471464,
+        "cost_per_resolved": 1.5845734491315135
+      },
+      "agent_metrics": {
+        "executed_tool_calls": 14099,
+        "case_duration_ms": {
+          "aggregate": 187712336,
+          "count": 500,
+          "max": 4641078,
+          "mean": 375424.672,
+          "median": 206294.0,
+          "min": 28779,
+          "p95_nearest_rank": 1139132
+        }
+      },
+      "operational_accounting": {
+        "canonical_tokens": 253430286,
+        "canonical_cost": 638.5831,
+        "excluded_noncanonical_terminal_attempts": 13,
+        "excluded_tokens": 3079805,
+        "excluded_cost": 8.270188,
+        "known_actual_attempt_tokens_lower_bound": 256510091,
+        "known_actual_attempt_cost_lower_bound": 646.853288
+      }
+    },
+    "r2": {
+      "run_id": "tag-rag-ast-b500-exploratory-20260721-r2",
+      "role": "prospectively registered replicate",
+      "generation_integrity": {
+        "primary_terminal_status_counts": {
+          "Submitted": 482,
+          "Timeout": 1
+        },
+        "primary_unfinished_after_resource_interruption": 17,
+        "quality_blind_recovery_membership": 18,
+        "recovery_status_counts": {
+          "Submitted": 18
+        },
+        "canonical_case_count": 500,
+        "canonical_status_counts": {
+          "Submitted": 500
+        },
+        "canonical_empty_patches": 0,
+        "canonical_agent_errors": 0,
+        "terminal_call_limit_cases": 0,
+        "unrecovered_non_agent_failures": 0,
+        "canonical_selection_rule": "482 frozen primary outcomes plus 18 quality-blind recovery outcomes",
+        "fingerprints_match": true,
+        "valid_terminal_artifacts_rerun": false,
+        "resource_interruption": "host OOM"
+      },
+      "official_harness": {
+        "status": "completed",
+        "submitted_instances": 500,
+        "completed_instances": 499,
+        "resolved_instances": 388,
+        "resolved_rate": 0.776,
+        "unresolved_nonempty_instances": 111,
+        "empty_patch_instances": 0,
+        "error_instances": 1,
+        "verifier_exit_code": 0,
+        "duration_ms": 6045889,
+        "classified_harness_errors": 1,
+        "error_classification": "patch-induced CPU-bound test timeout retained as an official Agent outcome; not rerun"
+      },
+      "model_metrics": {
+        "llm_calls": 13230,
+        "prompt_tokens": 243109850,
+        "cached_input_tokens": 237761216,
+        "uncached_input_tokens": 5348634,
+        "completion_tokens": 3713682,
+        "total_tokens": 246823532,
+        "cost_components": {
+          "cached_input": 475.522432,
+          "uncached_input": 42.789072,
+          "output": 103.983096
+        },
+        "estimated_cost": 622.2946,
+        "tokens_per_resolved": 636143.1237113402,
+        "cost_per_resolved": 1.60385206185567
+      },
+      "agent_metrics": {
+        "executed_tool_calls": 13798,
+        "case_duration_ms": {
+          "aggregate": 221312997,
+          "count": 500,
+          "max": 6981200,
+          "mean": 442625.994,
+          "median": 197192.5,
+          "min": 15046,
+          "p95_nearest_rank": 1737931
+        }
+      },
+      "operational_accounting": {
+        "canonical_tokens": 246823532,
+        "canonical_cost": 622.2946,
+        "excluded_noncanonical_terminal_attempts": 1,
+        "excluded_tokens": 1231974,
+        "excluded_cost": 3.375912,
+        "known_actual_attempt_tokens_lower_bound": 248055506,
+        "known_actual_attempt_cost_lower_bound": 625.670512
+      }
+    },
+    "r3": {
+      "run_id": "tag-rag-ast-b500-exploratory-20260721-r3",
+      "role": "prospectively registered replicate",
+      "generation_integrity": {
+        "primary_terminal_status_counts": {
+          "Submitted": 460,
+          "Error": 1
+        },
+        "primary_unfinished_after_resource_interruption": 39,
+        "quality_blind_recovery_membership": 39,
+        "recovery_status_counts": {
+          "Submitted": 39
+        },
+        "canonical_case_count": 500,
+        "canonical_status_counts": {
+          "Submitted": 499,
+          "Error": 1
+        },
+        "canonical_empty_patches": 1,
+        "canonical_agent_errors": 1,
+        "terminal_call_limit_cases": 1,
+        "unrecovered_non_agent_failures": 0,
+        "canonical_selection_rule": "461 frozen primary outcomes, including one retained Agent call-limit failure, plus 39 quality-blind recovery outcomes",
+        "fingerprints_match": true,
+        "valid_terminal_artifacts_rerun": false,
+        "resource_interruption": "host OOM"
+      },
+      "official_harness": {
+        "status": "completed",
+        "submitted_instances": 500,
+        "completed_instances": 499,
+        "resolved_instances": 394,
+        "resolved_rate": 0.788,
+        "unresolved_nonempty_instances": 105,
+        "empty_patch_instances": 1,
+        "error_instances": 0,
+        "verifier_exit_code": 0,
+        "duration_ms": 4392434
+      },
+      "model_metrics": {
+        "llm_calls": 13476,
+        "prompt_tokens": 257876156,
+        "cached_input_tokens": 252416576,
+        "uncached_input_tokens": 5459580,
+        "completion_tokens": 3752771,
+        "total_tokens": 261628927,
+        "cost_components": {
+          "cached_input": 504.833152,
+          "uncached_input": 43.67664,
+          "output": 105.077588
+        },
+        "estimated_cost": 653.58738,
+        "tokens_per_resolved": 664032.80964467,
+        "cost_per_resolved": 1.6588512182741117
+      },
+      "agent_metrics": {
+        "executed_tool_calls": 14005,
+        "case_duration_ms": {
+          "aggregate": 172521619,
+          "count": 500,
+          "max": 4199971,
+          "mean": 345043.238,
+          "median": 192132.5,
+          "min": 19336,
+          "p95_nearest_rank": 1096716
+        }
+      },
+      "operational_accounting": {
+        "canonical_tokens": 261628927,
+        "canonical_cost": 653.58738,
+        "excluded_noncanonical_terminal_attempts": 0,
+        "excluded_tokens": 0,
+        "excluded_cost": 0,
+        "known_actual_attempt_tokens_lower_bound": 261628927,
+        "known_actual_attempt_cost_lower_bound": 653.58738,
+        "limitation": "Interrupted work without a terminal trace is not reconstructable, so actual attempt usage is higher than or equal to this bound."
+      }
+    }
+  },
+  "three_replicate_summary": {
+    "canonical_case_runs": 1500,
+    "canonical_cost": {
+      "cached_input": 1468.6016,
+      "output": 315.291088,
+      "total": 1914.46508,
+      "uncached_input": 130.572392
+    },
+    "canonical_tokens": {
+      "cached_input": 734300800,
+      "completion": 11260396,
+      "prompt": 750622349,
+      "total": 761882745,
+      "uncached_input": 16321549
+    },
+    "cost_per_pooled_resolved_case_run": 1.615582345991561,
+    "pairwise_stability": {
+      "agreement_summary": {
+        "max": 0.902,
+        "mean": 0.888,
+        "median": 0.888,
+        "min": 0.874,
+        "range": 0.028000000000000025
+      },
+      "jaccard_summary": {
+        "max": 0.8841607565011821,
+        "mean": 0.8676560738606585,
+        "median": 0.8663484486873508,
+        "min": 0.8524590163934426,
+        "range": 0.03170174010773952
+      },
+      "r1_r2": {
+        "binary_agreement": 0.874,
+        "both_resolved": 364,
+        "neither_resolved": 73,
+        "r1_only_resolved": 39,
+        "r2_only_resolved": 24,
+        "resolved_set_jaccard": 0.8524590163934426
+      },
+      "r1_r3": {
+        "binary_agreement": 0.902,
+        "both_resolved": 374,
+        "neither_resolved": 77,
+        "r1_only_resolved": 29,
+        "r3_only_resolved": 20,
+        "resolved_set_jaccard": 0.8841607565011821
+      },
+      "r2_r3": {
+        "binary_agreement": 0.888,
+        "both_resolved": 363,
+        "neither_resolved": 81,
+        "r2_only_resolved": 25,
+        "r3_only_resolved": 31,
+        "resolved_set_jaccard": 0.8663484486873508
+      }
+    },
+    "per_case_success_counts": {
+      "resolved_one_of_three": 33,
+      "resolved_three_of_three": 350,
+      "resolved_two_of_three": 51,
+      "resolved_zero_of_three": 66,
+      "stable_resolved": 350,
+      "stable_unresolved": 66,
+      "variable": 84
+    },
+    "pooled_descriptive_resolved_rate": 0.79,
+    "resolved_case_runs": 1185,
+    "run_level": {
+      "canonical_cost": {
+        "max": 653.58738,
+        "mean": 638.1550266666667,
+        "median": 638.5831,
+        "min": 622.2946,
+        "range": 31.292780000000107
+      },
+      "cost_per_resolved": {
+        "max": 1.6588512182741117,
+        "mean": 1.615758909753765,
+        "median": 1.60385206185567,
+        "min": 1.5845734491315135,
+        "range": 0.0742777691425982
+      },
+      "resolved": {
+        "max": 403,
+        "mean": 395,
+        "median": 394,
+        "min": 388,
+        "range": 15
+      },
+      "resolved_rate": {
+        "max": 0.806,
+        "mean": 0.79,
+        "median": 0.788,
+        "min": 0.776,
+        "range": 0.030000000000000027
+      },
+      "total_tokens": {
+        "max": 261628927,
+        "mean": 253960915,
+        "median": 253430286,
+        "min": 246823532,
+        "range": 14805395
+      }
+    },
+    "three_way_resolved_intersection": 350,
+    "three_way_resolved_union": 434,
+    "tokens_per_pooled_resolved_case_run": 642939.0253164558,
+    "union_interpretation": "retry-oracle diagnostic only; not a single-run quality estimate"
+  },
+  "historical_native_comparisons": {
+    "comparison_rule": "Compare every V6 replicate with Native E1 and E2 separately; do not pool or average Native controls.",
+    "native_runs": {
+      "e1": {
+        "cost_per_resolved": 1.413340093994778,
+        "estimated_cost": 541.309256,
+        "resolved": 383,
+        "resolved_rate": 0.766,
+        "total_tokens": 209803789
+      },
+      "e2": {
+        "cost_per_resolved": 1.6199879899749374,
+        "estimated_cost": 646.375208,
+        "resolved": 399,
+        "resolved_rate": 0.798,
+        "total_tokens": 258800596
+      }
+    },
+    "run_wise": {
+      "r1": {
+        "e1": {
+          "classification": "historical quality-cost tradeoff",
+          "paired_cell_cost": {
+            "both_resolved": {
+              "cases": 367,
+              "delta": 6.78344,
+              "native": 335.548124,
+              "v6": 342.331564
+            },
+            "native_only_resolved": {
+              "cases": 16,
+              "delta": 24.94062,
+              "native": 48.381396,
+              "v6": 73.322016
+            },
+            "neither_resolved": {
+              "cases": 81,
+              "delta": 64.901032,
+              "native": 94.3905,
+              "v6": 159.291532
+            },
+            "v6_only_resolved": {
+              "cases": 36,
+              "delta": 0.648752,
+              "native": 62.989236,
+              "v6": 63.637988
+            }
+          },
+          "paired_outcomes": {
+            "both_resolved": 367,
+            "exact_mcnemar_two_sided_p": 0.0077874363057435225,
+            "native_only_resolved": 16,
+            "neither_resolved": 81,
+            "paired_difference_95_percent_interval": {
+              "lower_percentage_points": 1.1950763290242639,
+              "method": "paired Wald interval over the 500 per-instance V6-minus-Native binary differences",
+              "upper_percentage_points": 6.804923670975736
+            },
+            "v6_only_resolved": 36
+          },
+          "v6_minus_native": {
+            "estimated_cost": 97.273844,
+            "resolved_cases": 20,
+            "resolved_rate_percentage_points": 4.0,
+            "total_tokens": 43626497
+          }
+        },
+        "e2": {
+          "classification": "historically Pareto dominates Native",
+          "paired_cell_cost": {
+            "both_resolved": {
+              "cases": 372,
+              "delta": -0.925692,
+              "native": 342.2719,
+              "v6": 341.346208
+            },
+            "native_only_resolved": {
+              "cases": 27,
+              "delta": 8.302408,
+              "native": 62.408436,
+              "v6": 70.710844
+            },
+            "neither_resolved": {
+              "cases": 70,
+              "delta": 15.982076,
+              "native": 145.920628,
+              "v6": 161.902704
+            },
+            "v6_only_resolved": {
+              "cases": 31,
+              "delta": -31.1509,
+              "native": 95.774244,
+              "v6": 64.623344
+            }
+          },
+          "paired_outcomes": {
+            "both_resolved": 372,
+            "exact_mcnemar_two_sided_p": 0.6940040940761316,
+            "native_only_resolved": 27,
+            "neither_resolved": 70,
+            "paired_difference_95_percent_interval": {
+              "lower_percentage_points": -2.184559389926761,
+              "method": "paired Wald interval over the 500 per-instance V6-minus-Native binary differences",
+              "upper_percentage_points": 3.784559389926761
+            },
+            "v6_only_resolved": 31
+          },
+          "v6_minus_native": {
+            "estimated_cost": -7.792108,
+            "resolved_cases": 4,
+            "resolved_rate_percentage_points": 0.8,
+            "total_tokens": -5370310
+          }
+        }
+      },
+      "r2": {
+        "e1": {
+          "classification": "historical quality-cost tradeoff",
+          "paired_cell_cost": {
+            "both_resolved": {
+              "cases": 356,
+              "delta": 14.733376,
+              "native": 327.262804,
+              "v6": 341.99618
+            },
+            "native_only_resolved": {
+              "cases": 27,
+              "delta": 36.955668,
+              "native": 56.666716,
+              "v6": 93.622384
+            },
+            "neither_resolved": {
+              "cases": 85,
+              "delta": 0.01132,
+              "native": 99.334892,
+              "v6": 99.346212
+            },
+            "v6_only_resolved": {
+              "cases": 32,
+              "delta": 29.28498,
+              "native": 58.044844,
+              "v6": 87.329824
+            }
+          },
+          "paired_outcomes": {
+            "both_resolved": 356,
+            "exact_mcnemar_two_sided_p": 0.6029232012571503,
+            "native_only_resolved": 27,
+            "neither_resolved": 85,
+            "paired_difference_95_percent_interval": {
+              "lower_percentage_points": -2.0097330114148,
+              "method": "paired Wald interval over the 500 per-instance V6-minus-Native binary differences",
+              "upper_percentage_points": 4.0097330114147995
+            },
+            "v6_only_resolved": 32
+          },
+          "v6_minus_native": {
+            "estimated_cost": 80.985344,
+            "resolved_cases": 5,
+            "resolved_rate_percentage_points": 1.0,
+            "total_tokens": 37019743
+          }
+        },
+        "e2": {
+          "classification": "historical quality-cost tradeoff",
+          "paired_cell_cost": {
+            "both_resolved": {
+              "cases": 367,
+              "delta": 31.398988,
+              "native": 344.783756,
+              "v6": 376.182744
+            },
+            "native_only_resolved": {
+              "cases": 32,
+              "delta": 23.28808,
+              "native": 59.89658,
+              "v6": 83.18466
+            },
+            "neither_resolved": {
+              "cases": 80,
+              "delta": 14.834276,
+              "native": 94.94966,
+              "v6": 109.783936
+            },
+            "v6_only_resolved": {
+              "cases": 21,
+              "delta": -93.601952,
+              "native": 146.745212,
+              "v6": 53.14326
+            }
+          },
+          "paired_outcomes": {
+            "both_resolved": 367,
+            "exact_mcnemar_two_sided_p": 0.16897782228771874,
+            "native_only_resolved": 32,
+            "neither_resolved": 80,
+            "paired_difference_95_percent_interval": {
+              "lower_percentage_points": -5.04728033603999,
+              "method": "paired Wald interval over the 500 per-instance V6-minus-Native binary differences",
+              "upper_percentage_points": 0.6472803360399904
+            },
+            "v6_only_resolved": 21
+          },
+          "v6_minus_native": {
+            "estimated_cost": -24.080608,
+            "resolved_cases": -11,
+            "resolved_rate_percentage_points": -2.2,
+            "total_tokens": -11977064
+          }
+        }
+      },
+      "r3": {
+        "e1": {
+          "classification": "historical quality-cost tradeoff",
+          "paired_cell_cost": {
+            "both_resolved": {
+              "cases": 362,
+              "delta": 48.796872,
+              "native": 326.696092,
+              "v6": 375.492964
+            },
+            "native_only_resolved": {
+              "cases": 21,
+              "delta": 49.779636,
+              "native": 57.233428,
+              "v6": 107.013064
+            },
+            "neither_resolved": {
+              "cases": 85,
+              "delta": 0.361092,
+              "native": 105.326448,
+              "v6": 105.68754
+            },
+            "v6_only_resolved": {
+              "cases": 32,
+              "delta": 13.340524,
+              "native": 52.053288,
+              "v6": 65.393812
+            }
+          },
+          "paired_outcomes": {
+            "both_resolved": 362,
+            "exact_mcnemar_two_sided_p": 0.16897782228771874,
+            "native_only_resolved": 21,
+            "neither_resolved": 85,
+            "paired_difference_95_percent_interval": {
+              "lower_percentage_points": -0.6472803360399904,
+              "method": "paired Wald interval over the 500 per-instance V6-minus-Native binary differences",
+              "upper_percentage_points": 5.04728033603999
+            },
+            "v6_only_resolved": 32
+          },
+          "v6_minus_native": {
+            "estimated_cost": 112.278124,
+            "resolved_cases": 11,
+            "resolved_rate_percentage_points": 2.2,
+            "total_tokens": 51825138
+          }
+        },
+        "e2": {
+          "classification": "historically Pareto dominated by Native",
+          "paired_cell_cost": {
+            "both_resolved": {
+              "cases": 370,
+              "delta": 50.30844,
+              "native": 344.790028,
+              "v6": 395.098468
+            },
+            "native_only_resolved": {
+              "cases": 29,
+              "delta": 42.441628,
+              "native": 59.890308,
+              "v6": 102.331936
+            },
+            "neither_resolved": {
+              "cases": 77,
+              "delta": -47.661856,
+              "native": 158.030524,
+              "v6": 110.368668
+            },
+            "v6_only_resolved": {
+              "cases": 24,
+              "delta": -37.87604,
+              "native": 83.664348,
+              "v6": 45.788308
+            }
+          },
+          "paired_outcomes": {
+            "both_resolved": 370,
+            "exact_mcnemar_two_sided_p": 0.5831321542611763,
+            "native_only_resolved": 29,
+            "neither_resolved": 77,
+            "paired_difference_95_percent_interval": {
+              "lower_percentage_points": -3.8524566254370987,
+              "method": "paired Wald interval over the 500 per-instance V6-minus-Native binary differences",
+              "upper_percentage_points": 1.8524566254370982
+            },
+            "v6_only_resolved": 24
+          },
+          "v6_minus_native": {
+            "estimated_cost": 7.212172,
+            "resolved_cases": -5,
+            "resolved_rate_percentage_points": -1.0,
+            "total_tokens": 2828331
+          }
+        }
+      }
+    },
+    "source": "results/experiments/workspace-rag/v3-bge-m3-full500-r1.json",
+    "interpretation": "E1 and E2 are separate historical realizations, not pooled controls or a contemporaneous randomized comparison."
+  },
+  "prompt_growth_by_case_trajectory": {
+    "metric": "model-reported prompt tokens at the first and last LLM call of each canonical trajectory",
+    "runs": {
+      "r1": {
+        "available": false,
+        "calls_per_case": {
+          "max": 250,
+          "mean": 27.11,
+          "median": 20.0,
+          "p95_nearest_rank": 71
+        },
+        "first_call_prompt_tokens": null,
+        "last_call_prompt_tokens": null,
+        "last_minus_first_prompt_tokens": null
+      },
+      "r2": {
+        "available": true,
+        "calls_per_case": {
+          "max": 179,
+          "mean": 26.46,
+          "median": 20.0,
+          "p95_nearest_rank": 65
+        },
+        "first_call_prompt_tokens": {
+          "mean": 3010.056,
+          "median": 3032.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 17163.074,
+          "median": 10548.5
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 14153.018,
+          "median": 7451.5
+        }
+      },
+      "r3": {
+        "available": true,
+        "calls_per_case": {
+          "max": 250,
+          "mean": 26.952,
+          "median": 20.0,
+          "p95_nearest_rank": 71
+        },
+        "first_call_prompt_tokens": {
+          "mean": 3009.86,
+          "median": 3032.5
+        },
+        "last_call_prompt_tokens": {
+          "mean": 17441.83,
+          "median": 10881.0
+        },
+        "last_minus_first_prompt_tokens": {
+          "mean": 14431.97,
+          "median": 7902.5
+        }
+      }
+    },
+    "r1_limitation": "R1 imported public traces redact per-call usage, so its call-count distribution is available but first/last prompt-token growth is not reconstructed.",
+    "interpretation": "R2 and R3 have nearly identical approximately 3,010-token mean first prompts, consistent with the frozen preload contract. Their different final prompts and total costs are realized trajectory variation, not a component-level causal estimate."
+  },
+  "tool_profile": {
+    "metric": "executed and model-emitted Bash/code_search calls; Bash command-family counts are standalone-token multi-label counts",
+    "runs": {
+      "r1": {
+        "executed_tool_calls": 14099,
+        "model_emitted_tool_calls": 14099,
+        "bash_calls": 14018,
+        "code_search_calls": 81,
+        "cat": 2904,
+        "find": 273,
+        "grep": 3120,
+        "rg": 0,
+        "sed": 3411
+      },
+      "r2": {
+        "executed_tool_calls": 13798,
+        "model_emitted_tool_calls": 13798,
+        "bash_calls": 13720,
+        "code_search_calls": 78,
+        "cat": 2570,
+        "find": 316,
+        "grep": 3261,
+        "rg": 0,
+        "sed": 3327
+      },
+      "r3": {
+        "executed_tool_calls": 14005,
+        "model_emitted_tool_calls": 14005,
+        "bash_calls": 13918,
+        "code_search_calls": 87,
+        "cat": 2381,
+        "find": 285,
+        "grep": 3192,
+        "rg": 0,
+        "sed": 3411
+      }
+    },
+    "interpretation": "All emitted tools reconcile exactly to executed aggregates. The legacy V6 bundle remained Bash-first, with code_search used by 77 to 85 cases per run and no rg command-family use."
+  },
+  "retrieval_metrics": {
+    "runs": {
+      "r1": {
+        "preload_injected_cases": 500,
+        "preloaded_documents": 1556,
+        "preloaded_characters": 2513855,
+        "code_search_calls": 81,
+        "code_search_responses": 81,
+        "case_runs_with_code_search": 80,
+        "code_search_result_bytes": 381700
+      },
+      "r2": {
+        "preload_injected_cases": 500,
+        "preloaded_documents": 1556,
+        "preloaded_characters": 2513855,
+        "code_search_calls": 78,
+        "code_search_responses": 78,
+        "case_runs_with_code_search": 77,
+        "code_search_result_bytes": 370715
+      },
+      "r3": {
+        "preload_injected_cases": 500,
+        "preloaded_documents": 1556,
+        "preloaded_characters": 2513855,
+        "code_search_calls": 87,
+        "code_search_responses": 87,
+        "case_runs_with_code_search": 85,
+        "code_search_result_bytes": 414974
+      }
+    },
+    "interpretation": "Initial preload was injected in all 1,500 case-runs. On-demand code_search was sparse and supplementary; byte totals are operational telemetry, not a causal quality measure."
+  },
+  "workspace_index": {
+    "common_corpus_profile": {
+      "successful_cases_per_run": 500,
+      "representation": "ast-structured",
+      "retrieval_mode": "hybrid",
+      "documents_per_run": 13704528,
+      "eligible_files_per_run": 699590,
+      "indexed_files_per_run": 699544,
+      "missing_files_per_run": 46,
+      "file_coverage_min": 0.9809417040358744,
+      "file_coverage_mean": 0.9999096148323009,
+      "cases_below_full_coverage_per_run": 8,
+      "all_fallback_cases_per_run": 0,
+      "fallback_documents_per_run": 18380,
+      "fallback_document_rate": 0.0013411625705022456,
+      "fallback_reasons_per_run": {
+        "no_nodes": 18096,
+        "parse_error": 284
+      },
+      "node_types_per_run": {
+        "Class": 2455870,
+        "Function": 2575672,
+        "Interface": 478,
+        "Method": 7324748,
+        "Variable": 1329380,
+        "file": 18380
+      },
+      "content_chars_per_run": 6747758849,
+      "embedding_text_chars_per_run": 11749853448,
+      "duplicate_documents_per_run": 773592,
+      "duplicate_document_rate_weighted": 0.05644791268987885
+    },
+    "duration_ms": {
+      "r1": {
+        "aggregate": 70726517,
+        "count": 500,
+        "max": 1556568,
+        "mean": 141453.034,
+        "median": 95706.0,
+        "min": 4279,
+        "p95_nearest_rank": 690041
+      },
+      "r2": {
+        "aggregate": 65695602,
+        "count": 500,
+        "max": 4122632,
+        "mean": 131391.204,
+        "median": 96318.0,
+        "min": 1810,
+        "p95_nearest_rank": 174061
+      },
+      "r3": {
+        "aggregate": 38450682,
+        "count": 500,
+        "max": 207528,
+        "mean": 76901.364,
+        "median": 94710.5,
+        "min": 3843,
+        "p95_nearest_rank": 116865
+      }
+    },
+    "coverage_interpretation": "The identical 46-file difference across eight cases is the frozen scanner/reader accounting difference documented by V6, not runtime index loss."
+  },
+  "embedding_and_cache": {
+    "r1": {
+      "embedding": {
+        "requests": 18369,
+        "batch_requests": 17891,
+        "inputs": 253371,
+        "errors": 0,
+        "duration_ms": 28112788
+      },
+      "cache": {
+        "requests": 214965,
+        "batch_requests": 214384,
+        "inputs": 13705109,
+        "hits": 13450459,
+        "misses": 254650,
+        "writes": 253371,
+        "hit_rate": 0.9814193378542265,
+        "bytes_read": 54511476736,
+        "bytes_written": 1037807616,
+        "errors": 0,
+        "corruptions": 0
+      }
+    },
+    "r2": {
+      "embedding": {
+        "requests": 41,
+        "batch_requests": 0,
+        "inputs": 41,
+        "errors": 0,
+        "duration_ms": 4394
+      },
+      "cache": {
+        "requests": 214962,
+        "batch_requests": 214384,
+        "inputs": 13705106,
+        "hits": 13705065,
+        "misses": 41,
+        "writes": 41,
+        "hit_rate": 0.9999970084142362,
+        "bytes_read": 55549104128,
+        "bytes_written": 167936,
+        "errors": 0,
+        "corruptions": 0
+      }
+    },
+    "r3": {
+      "embedding": {
+        "requests": 53,
+        "batch_requests": 0,
+        "inputs": 53,
+        "errors": 0,
+        "duration_ms": 4633
+      },
+      "cache": {
+        "requests": 214971,
+        "batch_requests": 214384,
+        "inputs": 13705115,
+        "hits": 13705062,
+        "misses": 53,
+        "writes": 53,
+        "hit_rate": 0.9999961328306987,
+        "bytes_read": 55549091840,
+        "bytes_written": 217088,
+        "errors": 0,
+        "corruptions": 0
+      }
+    },
+    "interpretation": "R2 and R3 reused the persistent read-write cache after the historical run. Cache warmth and timing are operational context, not component-causal evidence."
+  },
+  "operational_accounting": {
+    "canonical": {
+      "tokens": 761882745,
+      "cost": 1914.46508
+    },
+    "known_terminal_artifact_attempt_lower_bound": {
+      "tokens": 766194524,
+      "cost": 1926.11118
+    },
+    "difference_from_canonical": {
+      "tokens": 4311779,
+      "cost": 11.6461,
+      "cause": "reconstructable superseded terminal attempts in R1 and R2"
+    },
+    "resource_recovery": {
+      "runs_with_resource_interruption": 3,
+      "r2_and_r3_primary_worker_count": 15,
+      "r2_and_r3_recovery_worker_count": 6,
+      "quality_treatment_changed": false,
+      "partial_interrupted_usage_reconstructable": false
+    },
+    "interpretation": "Canonical quality-cost comparison counts exactly one selected terminal artifact per case. Operational lower bounds exclude interrupted work without a terminal trace."
+  },
+  "decision": {
+    "absolute_full_panel_replicates_complete": 3,
+    "resolved_counts": [
+      403,
+      388,
+      394
+    ],
+    "canonical_costs": [
+      638.5831,
+      622.2946,
+      653.58738
+    ],
+    "prospective_reference_score_reproduced_replicates": 0,
+    "runs_at_or_above_400": 1,
+    "repeatable_at_least_80_percent_profile": false,
+    "runs_at_or_above_reference_403": 1,
+    "repeatable_reference_score": false,
+    "recommend_default_promotion": false,
+    "recommend_automatic_additional_run": false,
+    "revise_v5r_no_expansion": false,
+    "reasons": [
+      "Neither prospective run reproduced the selected 403-case reference: R2 resolved 388 and R3 resolved 394.",
+      "Only one of three runs reached 400 cases, so the pre-registered repeatable at-least-80-percent profile rule was not met.",
+      "Run-level resolved counts ranged from 388 to 403 and pairwise agreement from 87.4% to 90.2%, showing both aggregate and case-level variation.",
+      "Canonical cost ranged from 622.294600 to 653.587380 and did not move monotonically with resolved quality.",
+      "Every V6 run improved quality over Native E1 only at higher cost. Against Native E2, R1 historically dominated, R2 was a quality-cost tradeoff, and R3 was historically dominated."
+    ],
+    "conclusion": "Record the selected V6 bundle as a three-run 77.6% to 80.6% profile with 79.0% pooled descriptive case-run quality. The two prospective repeats did not reproduce the 80.6% reference, so do not promote the old bundle, report best-of-three, or attribute the profile to AST or preload alone."
+  },
+  "validation": {
+    "all_costs_recomputed_from_rate_card": true,
+    "all_five_case_sets_match": true,
+    "all_import_counts_match_case_statuses": true,
+    "all_usage_reconciles_to_import_summaries": true,
+    "case_count": 500,
+    "official_harness_configuration_matches_plan_r2_r3": true,
+    "pairwise_cells_sum_to_500": true,
+    "success_count_bins_sum_to_500": true,
+    "success_count_weighted_sum_matches_resolved_case_runs": true,
+    "all_three_canonical_case_sets_match": true,
+    "canonical_case_runs": 1500,
+    "all_public_and_private_fingerprints_match": true,
+    "official_harness_exit_zero_all_runs": true,
+    "r2_harness_error_classified_and_retained": true,
+    "all_non_agent_generation_failures_recovered_quality_blind": true,
+    "all_terminal_call_limit_failures_retained_canonical": true,
+    "pairwise_agreement_and_jaccard_recomputed": true,
+    "historical_native_controls_not_averaged": true,
+    "historical_paired_cells_and_costs_reconcile": true,
+    "trace_profile_reconciles_llm_and_tool_calls": true,
+    "workspace_index_aggregate_profiles_match_all_runs": true,
+    "embedding_errors_zero": true,
+    "cache_errors_zero": true,
+    "cache_corruptions_zero": true,
+    "case_list_sha256_verified": true,
+    "json_parse": true,
+    "metric_consistency_assertions": true,
+    "credential_and_internal_path_scan": "passed",
+    "markdown_links_verified": true
+  },
+  "publication_profile": {
+    "public_sanitized": true,
+    "included": [
+      "aggregate quality",
+      "canonical usage and cost",
+      "run-level descriptive statistics",
+      "aggregate per-case success bins",
+      "pairwise cells",
+      "separate historical Native comparisons",
+      "aggregate prompt, tool, retrieval, index, cache, and recovery evidence"
+    ],
+    "omitted": [
+      "verbatim user text",
+      "credentials and endpoints",
+      "absolute host paths and process identifiers",
+      "private binary and config fingerprints",
+      "raw artifact paths and hashes",
+      "per-instance quality outcomes"
+    ]
+  },
+  "limitations": [
+    "R1 was selected because it was the highest observed full-500 result; the three-run profile is conditional on that selection.",
+    "The 1,500 case-runs repeat the same 500 cases and are not 1,500 independent observations.",
+    "All three generations crossed resource-recovery discontinuities; R2 and R3 changed only recovery execution concurrency after freezing membership.",
+    "R2 retained one patch-induced verifier timeout as an official Agent error, and R3 retained one exact call-limit Agent failure as an empty unresolved outcome.",
+    "R1 per-call prompt-token growth is unavailable from the sanitized imported trace, although aggregate canonical usage is complete.",
+    "The persistent embedding cache was substantially warmer for R2 and R3 than for R1.",
+    "Native E1 and E2 are separate historical controls and do not establish a contemporaneous causal effect.",
+    "The frozen bundle combines AST representation, preload, legacy prompt/tool protocol, retrieval settings, and concurrency; these repeats cannot isolate any component."
+  ]
+}
