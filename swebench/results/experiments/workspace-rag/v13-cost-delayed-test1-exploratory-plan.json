@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "experiment_id": "cost-delay15930-exploratory-20260727",
+  "purpose": "Test whether the fresh Agent-adapt cost tail on django__django-15930 recurs together with delayed validation.",
+  "status": "post-selection exploratory mechanism check",
+  "selection": {
+    "source": "Selected after the completed V12 fresh-only 12-case generation analysis.",
+    "case_list_file": "v13-cost-delayed-test1-cases.txt",
+    "case_list_sha256": "2c134c2d838b49fb7c53a51a38a6c81775c92b25f86f654ff4c44a2a0678c835",
+    "case_count": 1,
+    "reason": "In V12, Agent-adapt rounds 2 and 3 delayed their first test until LLM calls 101 and 75 and cost 12.242 and 12.225; Native first tests occurred by calls 13, 23, and 38. No missing tool responses or exact-response loops were observed."
+  },
+  "fresh_runs": {
+    "rounds_per_arm": 3,
+    "trajectories_per_arm": 3,
+    "total_trajectories": 6,
+    "serial_pair_block_order": [
+      "native-r1",
+      "agentadapt-r1",
+      "agentadapt-r2",
+      "native-r2",
+      "native-r3",
+      "agentadapt-r3"
+    ],
+    "stopping_rule": "Fixed six trajectories; do not stop or extend based on observed effect size. Stop only for invalid configuration, artifact corruption, unrecovered infrastructure failure, or host safety limits."
+  },
+  "primary_mechanism": {
+    "event": "first_test_llm_call >= 50",
+    "interpretation": "Delayed verification tail",
+    "secondary_events": [
+      "llm_calls >= 75",
+      "cost ratio",
+      "cached input token ratio",
+      "inspect/edit/test calls before first test",
+      "first divergence in hypothesis or validation behavior"
+    ],
+    "analysis_policy": "Use only these six new trajectories for the primary recurrence count. V12 trajectories remain discovery/context and may be shown separately, not pooled into a confirmatory p-value."
+  },
+  "arms": {
+    "native": {
+      "historical_anchor": "tag-native-full500-20260723-e3",
+      "binary": "/data/validation/bin/trpc-agent-go-impl-ast-agent54-1532343",
+      "binary_sha256": "a4840b3e05110b7b3a861a58cbb59ee445279c3e7436b77298ca5e9b0135060c",
+      "framework_revision": "9c4a839314a2f0f0b782196e52a45c733a94f213",
+      "agent_workers": 15,
+      "code_search": false,
+      "workspace_preload": false,
+      "workspace_representation": "current-fixed"
+    },
+    "agentadapt": {
+      "historical_anchor": "tag-rag-ast-agentadapt-500-20260724-r1-r3",
+      "binary": "/data/validation/bin/trpc-agent-go-impl-rag-agentadapt-aad40c5",
+      "binary_sha256": "b282a16fd50ea4ec054e9684c441729de98c4c437b7f741645a2f4ababd6f627",
+      "framework_revision": "358d376784889fd539a764190e1970ee4f4fc5f6",
+      "agent_workers": 6,
+      "code_search": true,
+      "workspace_preload": false,
+      "workspace_representation": "ast-structured",
+      "prompt_family": "Agent-adapt"
+    }
+  },
+  "shared_fingerprints": {
+    "cases_sha256": "4b2a050a82d356963320cbfa8e2efdf6a133af8863f31b291a973ab4dd349d07",
+    "model_config_sha256": "fbfdf25e9fced3ecc51d244ccbb652c078b02ac640abbdbcca53ddbaa7af27de",
+    "embedding_config_sha256": "2452624a6a38fbd6f414a70b0c66e48653204662fe1b96c9026350bcc6d79bd1",
+    "environment_config_sha256": "3cfa72f92f4010d242e6adb9bb507ccdf9db261ba5726163b5adecd509c140f0",
+    "observation_codec": "xml",
+    "command_timeout": "1m",
+    "case_timeout": "2h"
+  },
+  "interpretation_boundary": "Single post-selected case; estimates recurrence for this mechanism candidate only and cannot be generalized to the full 500-case population or used as a single-factor code_search effect."
+}

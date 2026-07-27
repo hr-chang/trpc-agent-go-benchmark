@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "experiment_id": "cost-codesearch-repr15930-exploratory-20260727",
+  "purpose": "Test whether AST-structured code_search observations contribute to the django__django-15930 delayed-validation cost tail while preserving the Agent-adapt prompt, tool availability, tool order, validator, binary, and framework.",
+  "status": "post-selection exploratory representation ablation",
+  "selection": {
+    "source": "Selected after the completed V12 and V13 generation analyses.",
+    "case_list_file": "v14-cost-codesearch-repr15930-cases.txt",
+    "case_list_sha256": "2c134c2d838b49fb7c53a51a38a6c81775c92b25f86f654ff4c44a2a0678c835",
+    "case_count": 1,
+    "reason": "V13 showed a severe but non-arm-specific heavy tail. Directly setting code_search=false would also change prompts, tools, tool order, and validator semantics, so this experiment instead changes only the code_search workspace representation."
+  },
+  "fresh_runs": {
+    "rounds_per_arm": 3,
+    "trajectories_per_arm": 3,
+    "total_trajectories": 6,
+    "paired_parallel_blocks": [
+      ["ast-r1", "fixed-r1"],
+      ["fixed-r2", "ast-r2"],
+      ["ast-r3", "fixed-r3"]
+    ],
+    "execution_policy": "The two arms in each block start together; blocks run serially. Do not inspect outcomes between blocks or alter membership, order, or round count.",
+    "stopping_rule": "Fixed six trajectories; stop only for invalid configuration, artifact corruption, unrecovered infrastructure failure, or host safety limits."
+  },
+  "primary_mechanism": {
+    "event": "first_test_llm_call >= 50",
+    "secondary_events": [
+      "llm_calls >= 75",
+      "total canonical cost",
+      "calls and cost before first test",
+      "first semantically passing test call",
+      "code_search calls and result bytes before first test",
+      "calls from first code_search observation to first test"
+    ],
+    "analysis_policy": "Use only these six new trajectories for the primary recurrence count. V12 and V13 are discovery/context and must not be pooled into a confirmatory p-value."
+  },
+  "shared_bundle": {
+    "historical_anchor": "tag-rag-ast-agentadapt-500-20260724-r1-r3",
+    "binary": "/data/validation/bin/trpc-agent-go-impl-rag-agentadapt-aad40c5",
+    "binary_sha256": "b282a16fd50ea4ec054e9684c441729de98c4c437b7f741645a2f4ababd6f627",
+    "framework_revision": "358d376784889fd539a764190e1970ee4f4fc5f6",
+    "agent_workers": 6,
+    "code_search": true,
+    "workspace_preload": false,
+    "prompt_family": "Agent-adapt",
+    "observation_codec": "xml",
+    "command_timeout": "1m",
+    "case_timeout": "2h"
+  },
+  "arms": {
+    "ast": {
+      "workspace_representation": "ast-structured"
+    },
+    "fixed": {
+      "workspace_representation": "current-fixed"
+    }
+  },
+  "shared_fingerprints": {
+    "cases_sha256": "4b2a050a82d356963320cbfa8e2efdf6a133af8863f31b291a973ab4dd349d07",
+    "model_config_sha256": "fbfdf25e9fced3ecc51d244ccbb652c078b02ac640abbdbcca53ddbaa7af27de",
+    "embedding_config_sha256": "2452624a6a38fbd6f414a70b0c66e48653204662fe1b96c9026350bcc6d79bd1",
+    "environment_config_sha256": "3cfa72f92f4010d242e6adb9bb507ccdf9db261ba5726163b5adecd509c140f0"
+  },
+  "interpretation_boundary": "This tests the code_search retrieval representation, not tool presence. A difference can only support an AST-observation/content contribution on this one post-selected case; it cannot isolate code_search availability, generalize to 500 cases, or establish a prompt-independent causal effect."
+}
