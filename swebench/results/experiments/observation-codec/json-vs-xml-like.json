@@ -3,6 +3,7 @@
   "result_id": "observation-codec-json-vs-xml-like-full500",
   "status": "completed",
   "evidence_status": "complete_single_sequential_run_per_arm",
+  "source_repository": "https://github.com/hr-chang/trpc-agent-go-benchmark",
   "question": "On the same SWE-bench Verified 500-case panel and source-aligned Mini-Go agent, how do JSON and XML-like tool-result observations compare on official-harness quality and model-side usage?",
   "source_artifact": {
     "frozen_branch_head": "7264ec6d3946ec79b0c09ecfe4b5d8018c323d02",

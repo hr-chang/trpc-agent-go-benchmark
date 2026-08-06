@@ -3,6 +3,7 @@
   "result_id": "workspace-representation-fixed-raw-vs-ast-structured-full500",
   "status": "completed",
   "evidence_status": "complete_single_sequential_run_per_arm",
+  "source_repository": "https://github.com/hr-chang/trpc-agent-go-benchmark",
   "question": "Under the same workspace-RAG agent configuration, how do indentation-preserving fixed-raw chunks and AST-structured chunks compare on the canonical SWE-bench Verified 500-case panel?",
   "source_artifacts": [
     {

@@ -7,6 +7,10 @@
 - `experiments/` 只保留可通过冻结 commit 与内容 SHA 回溯的 machine-readable 摘要，
   不公开原始模型内容或服务器数据。
 
+每个结果包记录的冻结 source ref 均可在公开的
+[历史 fork](https://github.com/hr-chang/trpc-agent-go-benchmark) 中解析；SHA-256 用于固定摘要
+所依据的精确源文件。
+
 当前分支中的 public runner 是面向长期维护的重建实现。历史结果证明的是相应方法与冻结实现；
 当公开重建的协议与历史实现存在差异时，不自动把历史结果归因给新 runtime。
 

@@ -10,6 +10,10 @@ provenance-complete experiment summaries.
   to frozen source commits and content hashes without publishing raw model or
   server data.
 
+The frozen source refs recorded in each bundle resolve against the public
+[historical fork](https://github.com/hr-chang/trpc-agent-go-benchmark); SHA-256
+values pin the exact source files used for each summary.
+
 The public runner in this branch is a maintainable rebuild. Historical results
 are evidence for the evaluated methods and frozen implementations; they are not
 automatically attributed to the rebuilt runtime where the recorded protocol

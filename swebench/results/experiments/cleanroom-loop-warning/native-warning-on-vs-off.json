@@ -3,6 +3,7 @@
   "result_id": "cleanroom-native-loop-warning-on-vs-off-three-runs",
   "status": "completed",
   "evidence_status": "complete_with_one_reproducible_warning_off_harness_error",
+  "source_repository": "https://github.com/hr-chang/trpc-agent-go-benchmark",
   "question": "Across three fresh clean-room full-500 Native runs per setting, how do exact repeated-tool warnings enabled and disabled compare on official-harness quality, model-side usage, long tails, repeatability, and observed repeat-loop trajectories?",
   "source_artifacts": [
     {

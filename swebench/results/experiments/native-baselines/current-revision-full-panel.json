@@ -3,6 +3,7 @@
   "result_id": "native-current-revision-full500",
   "status": "completed",
   "evidence_status": "complete_single_run",
+  "source_repository": "https://github.com/hr-chang/trpc-agent-go-benchmark",
   "question": "What absolute official-harness quality and model-side usage did the frozen current-revision Native agent achieve without workspace retrieval?",
   "source_artifacts": [
     {
